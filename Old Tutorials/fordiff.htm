@@ -1,0 +1,252 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="frenzy">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>forward differencing</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<HR WIDTH="100%"><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>Forward Differencing</FONT></FONT></I></B>&nbsp;
+<HR WIDTH="100%"></CENTER>
+
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Something that may crop up in your graphics
+coding are curves.&nbsp; More specifically, drawing them.&nbsp; Maybe even
+drawing a surface made from curves to get wonderfully smooth looking objects.&nbsp;
+The problem is that to represent a curve you'd use say a cubic parametric
+equation.&nbsp; These are not the quickest things to evaluate.&nbsp; So,
+here is a common method for doing it in a fast way.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">The idea of forward differencing is this:</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp; What do I have to add to
+my previous value to get the next value.&nbsp; In other words, whats the
+difference between successive values.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Before we jump straight to cubic's lets look
+at more simple equations that we often evaluate.</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>The Equation of a Line:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">When your scan converting edges of your polygons
+you are using this equation:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; y-y1
+= m(x - x1)</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+y2 - y1</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>where m = -------</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+x2 - x1</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">As you move down the edge in the y-axis you
+evaluate the equation to calculate the x coordinate for that scan line.&nbsp;
+Sound familiar right?&nbsp; Your saying to yourself, erm, hang on. I only
+perform a single addition in my polygon scan conversion code.&nbsp; That's
+true..&nbsp; Lets look at how using forward differencing will reduce this
+down so we can perform a single addition to evaluate x.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets say we move along in steps of S.&nbsp;
+The difference then between the point at x and x+S is:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>m( (x+S) - x1) - ( m(x - x1)
+)</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= mx + mS - mx1 - mx + mx1</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= mS</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Now, we move along in steps of 1 in our scan
+conversion code so S = 1 which now makes the difference between two successive
+values simply equal to M.&nbsp; That means we need to initially calculate
+M at the start and from then on we just add M to get our next value.&nbsp;
+Great.&nbsp; Thats forward differencing, lets move to higher degree equations
+:)</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>The Quadratic (2nd degree
+polynomial):</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">You all know this equation.&nbsp; Its an equation
+of the form:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; Ax^2 + Bx
++ C = 0</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+where A>0</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">We can apply the same rules as above to find
+the difference between two successive values with a step size of S:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>A(x + S)^2 + B(x + S) + C -
+( Ax^2 + Bx + C )</FONT></TT></FONT>
+
+<P><TT><FONT COLOR="#FFFF99">For the mathematically impared I'll go through
+all workings slowly ;)</FONT></TT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>A(x + S)^2 = A(x + S)(x + S)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= A(x^2 + 2xS + S^2)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= Ax^2 + 2AxS + AS^2</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>B(x + S)&nbsp;&nbsp; = Bx +
+BS</FONT></TT></FONT>
+
+<P><TT><FONT COLOR="#FFFF99"><FONT SIZE=+1>So:</FONT></FONT></TT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>Ax^2 + 2AxS + AS^2 + Bx + BS
++ C - ( Ax^2 + Bx + C )</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Now cancel out our stuff leaving:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>2AxS + AS^2 + BS</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">But...&nbsp; Now this equation still needs
+to be evaluated before we can find out what value to add because it contains
+an x term.&nbsp; So, we have more work than a simple addition to perform.&nbsp;
+We can however perform forward differencing on this equation to see how
+this varies in steps of S.&nbsp; Lets do it:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>2A(x + S)S + AS^2 + BS - ( 2AxS
++ AS^2 + BS)</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= 2AxS + 2AS^2 + AS^2 + BS -
+2AxS - AS^2 - BS</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= 2AS^2</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Now lets look at the equations we have:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>y&nbsp;&nbsp; = Ax^2 + Bx +
+C</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx&nbsp; = 2AxS + AS^2 + BS</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx2 = 2AS^2</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">We now evaluate these 3 equations at the start
+and we generate Y's by the following:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>y&nbsp; += dx&nbsp;&nbsp;&nbsp;
+// y changes by dx each step of S</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx += dx2&nbsp;&nbsp; // dx
+changes by dx2 each step of S</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Now we see we have two additions.&nbsp; Oh
+what a shock, its a 2nd degree polynomial :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets move to finally 3rd degree polynomials.</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>The Cubic (3rd degree polynomial):</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Lets make a guess... We guess we need three
+additions to evaluate a cubic.&nbsp; Here is what the cubic looks like:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>Ax^3 + Bx^2 + Cx + D = 0</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Again, applying the same rules as above lets
+derive the values we must add for a step size of S:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>A(x + S)^3 + B(x + S)^2 + C(x
++ S) + D - ( Ax^3 + Bx^2 + Cx + D )</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>A(x + S)^3 = A(x^2 + 2xS + S^2)(x
++ S)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= A(x^3 + Sx^2 + 2x^2S + 2xS^2 + S^2x + S^3)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= A(x^3 + 3x^2S + 3xS^2 + S^3)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= Ax^3 + 3Ax^2S + 3AxS^2 + AS^3</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>B(x + S)^2 = B(x + S)(x + S)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= B(x^2 + 2xS + S^2)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= Bx^2 + 2BxS + BS^2</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>C(x + S)&nbsp;&nbsp;&nbsp; =
+Cx + CS</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>Ax^3 + 3Ax^2S + 3AxS^2 + AS^3
++ Bx^2 + 2BxS + BS^2 + Cx + CS + D - ( Ax^3 + Bx^2 + Cx + D )</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= 3Ax^2S + 3AxS^2 + AS^3 +
+2BxS + BS^2 + CS</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">We can help improve this by factoring some
+terms:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>3AxS^2 + 2BxS</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= x(3AS^2 + 2BS)</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= 3Ax^2S + x(3AS^2 + 2BS) +
+AS^3 + BS^2 + CS</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Anyway, we are left with a horrid equation,
+so, again lets forward difference it:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>3AS(x + S)^2 + (x + S)(3AS^2
++ 2BS) + AS^3 + BS^2 + CS - (3Ax^2S+x(3AS^2+2BS)+AS^3+BS^2+CS)</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>3AS(x + S)^2 = 3AS(x^2 + 2xS
++ S^2)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 3ASx^2 + 6AxS^2 + 3AS^3</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>(x + S)(3AS^2 + 2BS) = 3AxS^2
++ 3AS^3 + 2BSx + 2BS^2</FONT></TT></FONT>
+
+<P><TT><FONT COLOR="#FFFF99"><FONT SIZE=+1>(do the subtraction on terms..)</FONT></FONT></TT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= 6AxS^2 + 6AS^3 + 2BS^2</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Phew, one more step.&nbsp; Forward differencing
+on this equation:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>6A(x + S)S^2 + 6AS^3 + 2BS^2
+- (6AxS^2 + 6AS^3 + 2BS^2)</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>= 6AS^3</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Now our equations are:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>y&nbsp;&nbsp; = Ax^3 + Bx^2
++ Cx + D</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx&nbsp; = 3Ax^2S + x(3AS^2
++ 2BS) + AS^3 + BS^2 + CS</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx2 = 6AxS^2 + 6AS^3 + 2BS^2</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx3 = 6AS^3</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">We now evaluate these 4 equations at the start
+and we generate Y's by the following:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>y&nbsp;&nbsp; += dx&nbsp;&nbsp;&nbsp;
+// y changes by dx each step of S</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx&nbsp; += dx2&nbsp;&nbsp;
+// dx changes by dx2 each step of S</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>dx2 += dx3&nbsp;&nbsp; // dx2
+changes by dx3 each step of S</FONT></TT></FONT>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Now we see we have three additions.&nbsp; Oh
+what a shock, its a 3rd degree polynomial.</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Final Words:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">I hope this makes sense.&nbsp; Its leading
+up to another document on rendering cuvered surfaces or patches quickly.&nbsp;
+There are also needs to triangulate patches for a standard 3D engine.&nbsp;
+This can be done adaptivly based on some LOD (level of detail) so patches
+closer to camera get divided into more triangles than patches futher in
+the distance.&nbsp; This is a topic for another day.&nbsp; I can't say
+as of writing I've implemented LOD stuff so the article is a while off
+for the moment.&nbsp; Unless, you would like contribute an article to the
+page. Much credits will go your way if you do :)</FONT></I>
+
+<P><I><FONT COLOR="#FFCC00">"...code is art..."</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">frenzy</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">p.adams@wlv.ac.uk</FONT></I>
+<BR>&nbsp;
+<CENTER><A HREF="index.html">&nbsp;</A><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+&nbsp;
+<BR>&nbsp;
+</BODY>
+</HTML>

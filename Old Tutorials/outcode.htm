@@ -1,0 +1,419 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="fast outcode generation">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>frenzy</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<HR WIDTH="100%"><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>Fast Outcode
+Generation</FONT></FONT></I></B></CENTER>
+
+<CENTER><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>3D Clipping Update</FONT></FONT></I></B></CENTER>
+
+<CENTER>
+<HR WIDTH="100%"></CENTER>
+<B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Following on from my last article about effiecent
+3D clipping I'll introduce a nice little optimize for you all.&nbsp; How
+to quickly determine what planes a face/vertex is clipped too. Not only
+that but it has other benefits also as you will soon see.&nbsp; This isnt
+a new idea at all.&nbsp; Its simply what I was told and saw in some graphic
+gems code.&nbsp; Since its not in common use for alot of people I see no
+harm in explaining it to you all :)</FONT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Remember this from the previous article:</FONT></I>
+
+<P><FONT COLOR="#33FF33"><I><TT>&nbsp;&nbsp; Plane&nbsp; Clipping Limit</TT></I></FONT>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; left&nbsp; X ==-Z</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp; right&nbsp; X == Z</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp; top&nbsp; Y ==
+Z</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp; bottom&nbsp; Y ==-Z</FONT></TT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">To refresh your memory, this means:</FONT></I>
+
+<P><I><FONT COLOR="#33CCFF">&nbsp;if X &lt; -Z, the vertex lies outside
+the left plane.</FONT></I>
+<BR><I><FONT COLOR="#33CCFF">&nbsp;if X >&nbsp; Z, the vertex lies outside
+the right plane.</FONT></I>
+<BR><I><FONT COLOR="#33CCFF">&nbsp;if Y >&nbsp; Z, the vertex lies outside
+the top plane.</FONT></I>
+<BR><I><FONT COLOR="#33CCFF">&nbsp;if Y &lt; -Z, the vertex lies outside
+the bottom plane.</FONT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Now, why would we wish to optimize a simple
+compare?&nbsp; Well.. Lets consider this:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">You have say a few thousand vertices that must
+be transformed from object to eye space.&nbsp; Once transformed you need
+to check if any are outside the view volume, if they are visable you need
+to project them.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets look at a simple transformation loop:</FONT></I>
+<BR>&nbsp;
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;// in: ptr to object structure</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp; matrix
+representing xform from object->eye space</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;void TransformObjectVertices(MYOBJECT
+*obj, MATRIX4 viewmatrix)</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;{</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp; x,
+y, z;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp; ooz;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; ubyte&nbsp;&nbsp; flag;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; for(i=0; i&lt;obj->num_vertices;
+i++) {</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag = 0;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// transform vertex by view matrix:</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+x = obj->vertex[i].x * viewmatrix[Xx] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].y * viewmatrix[Xy] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].z * viewmatrix[Xz] + viewmatrix[Tx];</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+y = obj->vertex[i].x * viewmatrix[Yx] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].y * viewmatrix[Yy] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].z * viewmatrix[Yz] + viewmatrix[Ty];</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+z = obj->vertex[i].x * viewmatrix[Zx] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].y * viewmatrix[Zy] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].z * viewmatrix[Zz] + viewmatrix[Tz];</FONT></TT></I>
+<BR>&nbsp;
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(x > z)</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag |= 1;&nbsp; // right plane clipping</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(x &lt; -z)</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag |= 2;&nbsp; // left plane clipping</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(y > z)</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag |= 4;&nbsp; // top plane clipping</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(y &lt; -z)</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag |= 8;&nbsp; // bottom plane clipping</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// store transformed vertex</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex_xformed[i].x = x;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex_xformed[i].y = y;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex_xformed[i].z = z;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// if vertex is not outside a viewvolume plane, project.</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(!flag) {</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ooz = 1.0 / z;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex2[i].x = screen_half_width + (x * screen_half_width * ooz);</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex2[i].y = screen_half_height - (y * screen_half_height * ooz);</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; }</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;}</FONT></TT></I>
+
+<P><I><FONT COLOR="#FFFF99">This looks pretty straight forward.&nbsp; However,
+we could improve performance of this loop considerably.&nbsp; First, we
+dont want _ANY_ branching in our clipping checks.&nbsp; Secondly, if we
+could overlap this division by z with our clip checks we would basically
+get the division for free.&nbsp; Or atleast, be doing something worthwile
+as the division is in flight.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">At the moment the clipping checks are using
+the FPU which means we can't overlap the divide.&nbsp; The solution is
+to move the clip checks from the FPU to the CPU.&nbsp; Comparing two floating
+point numbers is fine so long as both are the same sign..&nbsp; Soon as
+a sign is involved things go a bit more complicated. So, how do we compare
+x with z with integer instructions and easily take into consideration the
+sign bits.&nbsp; Well.... Lets come up with an algorithm.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets assume our vertex is outside the left
+plane.&nbsp; That means then the condition is:</FONT></I>
+
+<P><I><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+X &lt; -Z</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets assume X = -30 and Z = 20</FONT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">First, we want to check if the numbers differ.&nbsp;
+So we can take their absolute values.</FONT></I>
+
+<P><I><FONT COLOR="#33CCFF">&nbsp;Abs(X) = 30</FONT></I>
+<BR><I><FONT COLOR="#33CCFF">&nbsp;Abs(Z) = 20</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">If we then subtract these two we can determine
+if their equal or not:</FONT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;Difference = Abs(Z) - Abs(X)</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 20 - 30</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -10</FONT></TT></I>
+
+<P><I><FONT COLOR="#FFFF99">The result is negative.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets assume that X = -20, Z = 30, so that the
+vertex does not fall outside the left plane:</FONT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;Abs(X) = 20</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;Abs(Z) = 30</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;Difference = 30 - 20</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= 10</FONT></TT></I>
+
+<P><I><FONT COLOR="#FFFF99">The result is positive.</FONT></I>
+<BR>&nbsp;
+<BR><I><FONT COLOR="#FFFF99">Finally, lets look at a vertex falling outside
+the right plane:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Our condition is:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+X > Z</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets assume then, X = 30 and Z = 20</FONT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;Abs(X) = 30</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;Abs(Z) = 20</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;Difference = 20 - 30</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -10</FONT></TT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Conclusion:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">If the result of the subtraction is negative
+we have a vertex that falls</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99"> outside
+a plane otherwise it is within the plane.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">One slight little problem.&nbsp; How do we
+know what plane it is.&nbsp; The vertex</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99">
+could be outside the left or right plane..&nbsp; We need a way of knowing.&nbsp;
+An</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99"> easy way is to look at the
+sign bit of the X value.&nbsp; If the sign is negative</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99">
+then we are dealing with the left plane otherwise its the right.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Great, so how can this help?&nbsp; Well, all
+these operations are simple to</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99">
+perform on floating point numbers and we can do them using integer</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99">
+arithmetic.&nbsp; Yeah, even the subtraction will give us the correct sign
+of</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99"> the operation :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets look at the code:</FONT></I>
+<BR>&nbsp;
+<BR>&nbsp;
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;unsigned int ix, iz, abs_x, abs_z,
+diff, t;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;// first, check against right and
+left planes:</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;iz = *(long *)&amp;z;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// iz is hexidecimal representation of z.</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;abs_z = iz &amp; 0x7FFFFFFF;&nbsp;&nbsp;
+// strip off sign bit (absolute)</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;ix = *(long *)&amp;x;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;abs_x = ix &amp; 0x7FFFFFFF;&nbsp;&nbsp;
+//</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;diff = (abs_z - abs_x) >> 31;&nbsp;
+// subtract and shift leaving just sign of</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// result</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;t = (ix>>31) + 1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// is it left or right plane?</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// if x is 0 (positive) then its right</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//&nbsp;&nbsp;&nbsp; x is 1 (negative) then its left</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;flag |= diff&lt;&lt;t;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// set correct flag</FONT></TT></I>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;</FONT></TT>
+<BR>&nbsp;
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Remember, our clip codes from earlier are:</FONT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;Right Plane&nbsp; = 0x1</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;Left Plane&nbsp;&nbsp; = 0x2</FONT></TT></I>
+
+<P><I><FONT COLOR="#FFFF99">So, t is 1 for right planes and 2 for left
+planes.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now extend that to top and bottom and everything
+is dandy..</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Now what to do?:</FONT></FONT></I></B>
+
+<P><I><FONT COLOR="#FFFF99">Now we can place the clip code generation after
+the divide and when we have</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99"> built
+the clip codes we will have our 1/z value calculated.</FONT></I>
+<BR>&nbsp;
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;// in: ptr to object structure</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;//&nbsp;&nbsp;&nbsp;&nbsp; matrix
+representing xform from object->eye space</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;void TransformObjectVertices(MYOBJECT
+*obj, MATRIX4 viewmatrix)</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;{</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+x, y, z;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ooz;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; ubyte&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; unsigned int&nbsp;&nbsp;&nbsp;
+ix, iz, abs_x, abs_z, diff, t;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; for(i=0; i&lt;obj->num_vertices;
+i++) {</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag = 0;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// transform vertex by view matrix:</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+x = obj->vertex[i].x * viewmatrix[Xx] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].y * viewmatrix[Xy] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].z * viewmatrix[Xz] + viewmatrix[Tx];</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+y = obj->vertex[i].x * viewmatrix[Yx] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].y * viewmatrix[Yy] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].z * viewmatrix[Yz] + viewmatrix[Ty];</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+z = obj->vertex[i].x * viewmatrix[Zx] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].y * viewmatrix[Zy] +</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex[i].z * viewmatrix[Zz] + viewmatrix[Tz];</FONT></TT></I>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;</FONT></TT>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ooz = 1.0 / z;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // overlapping with following
+clip gen code</FONT></TT></I>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;</FONT></TT>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// clip code generation</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+iz = *(long *)&amp;z;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+abs_z = iz &amp; 0x7FFFFFFF;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ix = *(long *)&amp;x;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+abs_x = ix &amp; 0x7FFFFFFF;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+diff = (abs_z - abs_x) >> 31;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+t = (ix>>31) + 1;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag |= diff&lt;&lt;t;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+iy = *(long *)&amp;y;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+abs_y = iy &amp; 0x7FFFFFFF;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+diff = (abs_z - abs_y) >> 31;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+t = (iy>>31) + 3;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+flag |= diff&lt;&lt;t;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex_xformed[i].x = x;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex_xformed[i].y = y;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex_xformed[i].z = z;</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// if vertex is not outside a viewvolume plane, project.</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(!flag) {</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// our 1/z is ready now i guess :)</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex2[i].x = screen_half_width + (x * screen_half_width * ooz);</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+obj->vertex2[i].y = screen_half_height - (y * screen_half_height * ooz);</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; }</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;}</FONT></TT></I>
+
+<P><I><FONT COLOR="#FFFF99">And, I'm sure you can overlap some other things
+inside here and organise</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99"> the
+entire code so it all performs wonderfully.&nbsp; Just pull out VTUNE and</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99">
+see what you can do.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Remember, the C/C++ compiler probably has no
+idea of your intentions to</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99"> overlap
+this division so you'll need assembler maybe.. Perhaps some inline</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99">
+asm statement to start off the divide and then at the end of the clipcode</FONT></I>&nbsp;<I><FONT COLOR="#FFFF99">
+stuff, pop the result off the fpu stack.</FONT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Hope this helps..</FONT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Greets to #3dcoders, #coders, #ukscene.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">&nbsp;</FONT><FONT COLOR="#FFCC00">frenzy</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">&nbsp;"...code is art..."</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">&nbsp;- p.adams@wlv.ac.uk</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">&nbsp;- frenzy_code@hotmail.com</FONT></I>
+<BR><FONT COLOR="#FFCC00">&nbsp;</FONT>
+<CENTER><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+
+</BODY>
+</HTML>

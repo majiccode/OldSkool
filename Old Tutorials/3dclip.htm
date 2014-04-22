@@ -1,0 +1,736 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="frenzy">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <META NAME="Description" CONTENT="Learn some tricks to perform fast 3D clipping!!!">
+   <TITLE>3D Clipping Tutorial</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<HR WIDTH="100%">
+<CENTER><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>World Class 3D Clipping</FONT></FONT></I></B></CENTER>
+
+<HR WIDTH="100%">
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">I'm sure your all aware of the advantages
+of clipping in 3D space.&nbsp; That was not the case a few years ago but
+gradually people have begun to realise that clipping in 3D space is both
+faster and easier.&nbsp; However, as with all&nbsp; things in this world,
+nothing is clear cut.&nbsp; There are a few decisions to make when attemping
+to clip in the most efficient way.&nbsp; Lets get some terms out of the
+way first so you all know what I'm talking about ;)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">When we clip in 3D space I am talking about
+clipping to the view volume or view frustum.&nbsp; That represents a volume
+the eye or camera can see.&nbsp; Its defined by several clipping planes.&nbsp;
+Typically this is about 6 planes, one for the near plane (z-clipping),
+left, right, top, bottom planes and optionally a far plane.&nbsp; To define
+these planes we use a parameter known as field of vision (FOV).&nbsp; This
+angle represents the area we see.&nbsp; A typical field of vision is about
+60degrees.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">After we have clipped our polygons to this
+volume we can project them to screen space without fear of any invalid
+z coordinates (behind viewer) and without any worries about our polygon
+spanning off screen.&nbsp; Yes folks, clipping in 3D means we don't have
+to clip in 2D !!</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">With that said, lets discuss some methods in
+a pretty easy to read way :)</FONT></I>
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Know Your Spaces:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">As mentioned, things are not clear cut.&nbsp;
+3D engines can gain many speed boosts by performing operations early on,
+say in object space.&nbsp; After speaking to a couple of people on IRC
+its clear that people get confused about spaces. Its understandable but
+lets help them along a bit.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF00">Object Space&nbsp;&nbsp;&nbsp; </FONT><FONT COLOR="#FFFF99">-
+The space objects are usually defined in and has its own local origin at
+(0,0,0)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF00">World Space</FONT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp;
+- The space object positions, camera positions, targets, Light positions,
+etc, are defined in.&nbsp; Origin at (0,0,0)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF00">Camera Space</FONT><FONT COLOR="#FFFF99">&nbsp;
+- The space that represents what the eye can see. The camera position is
+the origin and represents (0,0,0).</FONT></I>
+
+<P><I><FONT COLOR="#FFFF00">Screen Space</FONT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;
+- The projected version of camera space to produce 2D coordinates.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">To get from one space to another we need to
+perform a transformation.&nbsp; So, to get from object space to world space
+we usually would transform the objects vertices by the objects tranformation
+matrix.&nbsp; Following on from that, to get from world space to camera
+space we would transform these transformed vertices by the camera matrix.&nbsp;
+Finally, we perform our projection on these vertices, be it perspective
+or parallel to get our 2D screen coordinates.&nbsp; Now we can plot the
+points! It follows that if we can move from one space to another via a
+single transformation we can go in the opposite direction using the inverse
+of that transformation.&nbsp; Also, we dont have to move through just one
+space at a time (object space to world space for example).&nbsp; We can
+move through several spaces.&nbsp; We just need a transformation that represents
+all the transforms put together.&nbsp; You all know and love matrix multiplication
+;)))</FONT></I>
+<BR><I>&nbsp;</I>
+
+<P><I><FONT COLOR="#FFFF99">Hopefully that is a simple description but
+what this means is if we perform operations in object space we can maybe
+reduce the amount of vertices that need to be transformed.&nbsp; For example,
+if we perform back face culling in object space we could eliminate on average
+50% of the polygons before it even gets to the clipping stage.&nbsp; Sounds
+goood huh?&nbsp; Well what about doing 3D clipping in object space?&nbsp;
+That would mean we can clip polygons to the view volume and only transform
+those visable faces from object space which will give us a nice speed boost.&nbsp;
+Lets look at how we do it:</FONT></I>
+<BR><I>&nbsp;</I>
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>3D Clipping In Object Space:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">We first need to define our view volume planes.&nbsp;
+Clipping in 3D means we clip polygons to planes.&nbsp; We have our field
+of vision angle we now define our view volume planes.&nbsp; The equation
+of a plane is given by:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Ax + By + Cz + D = 0</FONT>
+
+<P><FONT COLOR="#FFFF99">[A,B,C]&nbsp;&nbsp;&nbsp; - is the normal vector
+to the plane.</FONT>
+<BR><FONT COLOR="#FFFF99">[x,y,z]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -
+is any point in 3D space.</FONT>
+<BR><FONT COLOR="#FFFF99">D&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+- is the distance the plane is from the origin.</FONT>
+
+<P><I><FONT COLOR="#FFFF99">To define a plane then we can use a normal
+vector and a distance from the origin.&nbsp; The equation tells us that
+any point that falls on this plane will then make the equation above evaluate
+to zero.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">With that said, lets generate our planes normal
+vectors with some simple trig.</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF">Let t = FOV * 0.5;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</FONT><FONT COLOR="#99FF99">&nbsp;</FONT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Y</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp; Z</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">&nbsp;&nbsp;</FONT><FONT COLOR="#33CCFF">
+Plane&nbsp; Normal&nbsp;&nbsp;</FONT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp; /</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp; left&nbsp; [cos(t), 0,
+sin(t)]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp; /</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">&nbsp;&nbsp; right&nbsp; [-cos(t), 0, sin(t)]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+| /</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp; top&nbsp; [0, -cos(t),
+sin(t)]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|/</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">&nbsp; bottom&nbsp; [0, cos(t), sin(t)]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
++---------X</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp; near&nbsp; [0, 0, 1]</FONT></TT>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">I hope you can see that these normals are defined
+in eye or camera space. We now need to transform them into object space.&nbsp;
+To do this we need a transformation that represents a move from object
+space through world space to camera space.&nbsp; This matrix is then inversed
+(transpose it).&nbsp; Now, transform the planes normal by this matrix.&nbsp;
+Now the planes are orientated in object space and we need a distance value
+the planes are from the eye. This is simple to calculate, take the dot
+product of the camera's position with the planes normal vector:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">Plane Distance = Plane Normal DOT Camera Position</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Do this for each view volume plane and we have
+a set of planes defining the view volume that are orientated in object
+space.&nbsp; We can now clip faces to these planes and we will have only
+what is visable to the eye.&nbsp; Remember, perform back face culling before
+clipping to eliminate back facing polygons to save some work.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now we need to know how to clip a polygon to
+a plane.</FONT></I>
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Clipping A Polygon To A Plane:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Remembering our plane equation from earlier
+we can easily determine if a point is on a plane.&nbsp; This is step one.
+The next step is to realise that a polygon is just a series of edges.&nbsp;
+An edge is a line.&nbsp; So, to clip a polygon to a plane we can take each
+edge of the polygon and calculate the intersection point that the line
+makes with the plane.&nbsp; Take a look at this diagram:</FONT></I>
+
+<P><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp; PLANE</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+A&nbsp;&nbsp;&nbsp;&nbsp; Here a triangle is cutting a plane.&nbsp; The
+intersection point</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
++&nbsp;&nbsp;&nbsp;&nbsp; is marked.&nbsp; The lines AB and BC intersect
+the plane and the</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;
+/|&nbsp;&nbsp;&nbsp;&nbsp; line AC is fully inside and requires no clipping.</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp; /
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | /&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |/&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
++</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp; /&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp; /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/ |</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp; B+&nbsp; poly |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp; |</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp; \&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp; --->&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /&nbsp;&nbsp; |</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp; \&nbsp;&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; x&nbsp;&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |\&nbsp;&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | \&nbsp;
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+| The final clipped triangle.&nbsp; Results in an</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp; \
+|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+| n-gon.</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;
+\|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
++&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;
+C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; +&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp; |</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp; |</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\ |</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
++</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Okay, lets start with edge AB.&nbsp; We first
+must decide if it does intersect with the plane.&nbsp; To do this we simply
+check point A and point B against the plane to see what sides they fall
+on.&nbsp; To do this we perform a dot product with the point and the planes
+normal and check it against the distance the plane is from the origin.</FONT></I>
+
+<P><FONT COLOR="#33CCFF">Let point A be [Ax, Ay, Az]</FONT>
+<BR><FONT COLOR="#33CCFF">Let point B be [Bx, By, Bz]</FONT>
+<BR><FONT COLOR="#33CCFF">Let the plane normal be [Nx,Ny,Nz]</FONT>
+<BR><FONT COLOR="#33CCFF">Let the planes distance from origin be PD</FONT>
+
+<P><FONT COLOR="#33CCFF">dA = Ax*Nx + Ay*Ny + Az*Nz</FONT>
+<BR><FONT COLOR="#33CCFF">dB = Bx*Nx + By*Ny + Bz*Nz</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Our conditions are:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">dA_inside = (dA >= PD);</FONT>
+<BR><FONT COLOR="#33CCFF">dB_inside = (dB >= PD);</FONT>
+<BR><FONT COLOR="#33CCFF">Intersection = (dA_inside != dB_inside);</FONT>
+
+<P><I><FONT COLOR="#FFFF99">If dA_inside is true then point A is inside
+the plane.</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">If dB_inside is true then point B is inside
+the plane.</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">If Intersection is true then it shows point
+A and point B lie on opposite sides of the plane and hence intersect it.&nbsp;
+Thus, it requires clipping.</FONT></I>
+<BR><I>&nbsp;</I>
+<BR><I><FONT COLOR="#FFFF99">In our case point A would be inside the plane
+and point B would be outside the plane.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now, we have decided AB intersects the plane.&nbsp;
+We need to calculate the intersection point.&nbsp; What does this value
+'dA' and 'dB' represent?&nbsp; Well, its the distance along the planes
+normal the point is from the plane.&nbsp; Did you understand that ?&nbsp;
+Its the DISTANCE the point is from the plane ;)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Since we have found the distances the points
+A and B are from the plane we can use the ratio to calculate a scaler that
+will indicate where along the line AB the plane equation equals zero.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Our scaler then can be calculated like this:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">Scaler = (PD - dA) / (dB - dA)</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Remember, we know the planes distance value,
+PD, because we calculated it when we transformed our view volume planes
+from camera space to object space.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Finally, to use the scaler value to calculate
+the intersection point we do:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">Ix = Ax + (Bx - Ax)*Scaler</FONT>
+<BR><FONT COLOR="#33CCFF">Iy = Ay + (By - Ay)*Scaler</FONT>
+<BR><FONT COLOR="#33CCFF">Iz = Az + (Bz - Az)*Scaler</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Well done, we have clipped a line to a plane.&nbsp;
+Putting it all together means we need to loop through our polygons vertices.&nbsp;
+Check each edge against the plane.&nbsp; If it is fully within the plane
+we keep the edge, if it intersects the plane we store the new edge given
+by the point inside the plane and the intersection point for this edge
+and if the edge is fully outside the plane we throw the edge away.&nbsp;
+Implementation of this means we need a source polygon and a place to store
+the new clipped polygon.&nbsp; We read edges from the source polygon and
+based on what I just said add edges to the destination polygon.&nbsp; As
+soon as we have done all edges, (AB, BC, CA), in the source polygon our
+destination polygon will result in a perfectly clipped polygon. Horray
+:)</FONT></I>
+<BR>&nbsp;
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>The Pro's and Con's:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Its all been pretty simple.&nbsp; We now have
+fully clipped polygons and we havent had to transform them at all to get
+there.&nbsp; The trouble however is the dot product is required to test
+if a point is inside or outside the plane. On newer processors this won't
+be much of a problem if they have instructions dedicated for this.&nbsp;
+However, currently, dot products are not that cheap. They are quite quick
+but the amount of times we use it soon starts to have impact on our performance.&nbsp;
+So on one hand we have saved ourselves some time transforming non-visable
+faces and on the other we have expensive tests to perform clipping.&nbsp;
+Let me point out that most faces won't require clipping.&nbsp; Only a few
+faces in your object will require clipping.&nbsp; From this you can see
+that the bottleneck is the test for clipping, not the actual clipping itself.&nbsp;
+A way to improve this would be pretty neat.&nbsp; Lets now take a look
+at the possability of using a different space in which to clip our faces.&nbsp;
+Lets move to camera space.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">BOOOOOOOOOOOM!</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">We are in camera space.. You've transformed
+your objects into this space and now we wish to clip.&nbsp; Well, we could
+do the same process as above but save transforming our planes normals since
+we defined them in camera space to begin with.&nbsp; Thats not saved much
+and rather pointless.&nbsp; So, what can we do?&nbsp; One trick is to use
+a fixed field of vision of 90degrees.&nbsp; How can this help?&nbsp; Well,
+making the field of vision 90degrees makes our planes</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">orientation rather special.&nbsp; Look at
+this diagram.</FONT></I>
+<BR>&nbsp;
+
+<P><TT>&nbsp;<FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+left plane&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; right plane</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+Z</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp; /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp; |&nbsp;&nbsp; /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp; |t /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+|</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\ | /&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
++--------->x</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\|/&nbsp;&nbsp;&nbsp; t = 45degrees</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+eye</FONT></TT>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">This is a 90degree field of view.&nbsp; It
+might not look like it with my ascii art but trust me ;)&nbsp; The eye
+is at the origin, (0,0,0). If we move forward in the z-axis direction by
+1 the x value that falls on the right plane is 1 and similary, its -1 on
+the left plane.&nbsp; Move forward 10 on the z-axis and on the right plane,
+x = 10 and -10 for the left plane.&nbsp; You can think of it as the planes
+span from the origin at 45degrees to the eye and the gradient of the plane
+is 1 or -1.&nbsp; Hence a step of 1 in Z results in a step of 1 or -1 on
+the right and left plane respectivly.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">So, if we know our Z coordinate (which we always
+do obviously) we know the X coordinate where the intersection occurs at.&nbsp;
+This is the same for the top and bottom planes.&nbsp; Except its Y and
+not X in that case.&nbsp; Okay.&nbsp; This gives us some clipping limits:</FONT></I>
+<BR>&nbsp;
+<BR><TT><FONT COLOR="#66FF99">&nbsp;&nbsp; Plane&nbsp; Condition</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; left&nbsp; X ==-Z</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp; right&nbsp; X == Z</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp; top&nbsp; Y == Z</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp; bottom&nbsp; Y ==-Z</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">How do we check if a point is in the view volume
+? We use a simple compare! Thats a damn site faster than a dot product
+:)</FONT></I>
+
+<P><FONT COLOR="#33CCFF">&nbsp;X &lt; -Z == Point outside left plane</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;X >&nbsp; Z == Point outside right plane</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;Y &lt; -Z == Point outside bottom plane</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;Y >&nbsp; Z == Point outside top plane</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Ahhh very nice.&nbsp; So, replace the dot product
+check with a compare and we have now got a very fast way to determine if
+points fall in or out of view.&nbsp; Now, your saying great.&nbsp; We can
+apply this to our clipping example from earlier and have determined edge
+AB requires clipping.&nbsp; How do we calculate the intersection point.&nbsp;
+Previously, we used the result of the dot product as distances and generated
+a scaler value.&nbsp; Lets take a look at how we calculate the scaler value
+now:</FONT></I>
+<BR><I>&nbsp;</I>
+
+<P><I><FONT COLOR="#FFFF99">Lets take the left plane for example.&nbsp;
+We know that the X value on the plane is equal to -Z value.&nbsp; Our equation
+for a line is:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF">&nbsp;x = x1 + t(x2-x1)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;y = y1 + t(y2-y1)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;z = z1 + t(z2-z1)</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">t is a value in the range 0..1 and tells us
+where about on the line we are, ie, its our scaler value from earlier ;)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">lets find t:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF">x1 + t(dx)&nbsp;&nbsp;&nbsp;&nbsp; = -(z1
++ t(dz))&nbsp;&nbsp;&nbsp;&nbsp; ( x == -z on plane remember ;)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -z1 - t(dz)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;x1 + z1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= -t(dz) - t(dx)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;x1 + z1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= t(-dz - dx)</FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF">&nbsp;t&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= (x1 + z1) / (-dz - dx)</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">So, our clipping function for the left plane
+is:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF">&nbsp;dx = x2 - x1</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;dz = z2 - z1</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;scaler = (x1 + z1) / (-dz - dx)</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">&nbsp;So, to calculate the intersection point
+for the left plane we have:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF">&nbsp;dx = Bx - Ax</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;dz = Bz - Az</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;Scaler = (Ax + Az) / (-dz - dx)</FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF">&nbsp;Ix = Ax + (Bx - Ax)*Scaler</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;Iy = Ay + (By - Ay)*Scaler</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;Iz = Az + (Bz - Az)*Scaler</FONT></TT>
+<BR>&nbsp;
+<BR><I><FONT COLOR="#FFFF99">&nbsp;Tada!! Simple or what.&nbsp; Now, do
+the same thing for right, top and bottom and you have these formula's:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF">&nbsp;dx = x2 - x1</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;dy = y2 - y1</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;dz = z2 - z1</FONT></TT>
+
+<P><TT>&nbsp;<FONT COLOR="#66FF99">&nbsp; Plane&nbsp; Scaler</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; left&nbsp; (Ax + Az) /
+(-dz - dx)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp; right&nbsp; (Ax - Az) / (-dx
++ dz)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp; top&nbsp; (Ay -
+Az) / (-dy + dz)</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp; bottom&nbsp; (Ay + Az) / (-dz - dy)</FONT></TT>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">You can see that the equations are pretty simple.&nbsp;
+So, lets sum up.&nbsp; Using a 90degree FOV and clipping in camera space
+means we can quickly determine what points are within the view volume with
+just compares.&nbsp; We can perform intersection calculations very easily
+using the equations above for each of the planes and we can put this together
+with our basic clipping algorithm mentioned previously to perform very
+fast clipping.</FONT></I>
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>No More 2D Clipping:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">We have transformed objects to camera space,
+clipped them, now we project them and render them.&nbsp; Whats wrong with
+this?&nbsp; Screen boundaries. We don't want to render outside our screen
+limits and we don't want to put any 2D clipping in.&nbsp; We want to perform
+it with the 3D clipping function.&nbsp; Its very simple to do, you just
+need to look a little at the perspective projection formula.&nbsp; Our
+perspective projection formula looks typically like this:</FONT></I>
+
+<P>&nbsp;<FONT COLOR="#33CCFF">x' = xd / z</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;y' = yd / z</FONT>
+
+<P><TT><FONT COLOR="#FFFF99">(x',y') - are screen coordinates</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">(x,y,z) - are 3d camera space coordinates</FONT></TT>
+<BR><TT><FONT COLOR="#FFFF99">d&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - is
+the distance the screen is from viewer</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">The important value here ladies and gentlemen
+is the value 'd'.&nbsp; Let me draw that all-singing, all-dancing 90degree
+FOV view volume for you once more:</FONT></I>
+
+<P><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+left plane&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; right plane</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+/</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
++-----+-----+ &lt;- width of screen</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp; /</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp; |d&nbsp; /</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp; |&nbsp; /</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\ | /</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\|/</FONT></TT>
+<BR><TT><FONT COLOR="#FFCCCC">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+eye</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">To automatically clip to the screen we simply
+make it so that d is the correct distance that the screen limits fit exactly
+on the view planes.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">So, to calculate d we need a little bit of
+trig as follows:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">d = (screen_x_resolution / 2) / tan(fov / 2)</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Great. One snag, since when is the screen's
+x resolution the same as its y resolution? No problem, lets calculate a
+d value for the y resolution also:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">dx = (screen_x_resolution / 2) / tan(fov / 2)</FONT>
+<BR><FONT COLOR="#33CCFF">dy = (screen_y_resolution / 2) / tan(fov / 2)</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Have you ever heard of an aspect ratio? Most
+video modes are not 1:1 aspect ratio which means you don't get nice square
+pixels.&nbsp; So, a circle drawn on a 1:1 aspect ratio will look like an
+elipse on a non 1:1 aspect ratio, ie, a 320x200 screen.&nbsp; We all know
+and love xmode and remember the days of the most famous video mode 320x240.&nbsp;
+People used that because it provided this magic 1:1 aspect ratio.&nbsp;
+How can we get a 1:1 aspect ratio on any resolution is a good question.&nbsp;
+Simple, we scale the y component during projection by some value.&nbsp;
+The value is calculated like this:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">240 / 320 = 0.75&nbsp; (ratio of y with x for
+a known 1:1 aspect ratio)</FONT>
+
+<P><FONT COLOR="#33CCFF">0.75 * (screen_x_resolution / screen_y_resolution)
+= aspect ratio</FONT>
+
+<P><I><FONT COLOR="#FFFF99">From this we now have:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">dx = (screen_x_resolution / 2) / tan(fov / 2)</FONT>
+<BR><FONT COLOR="#33CCFF">dy = (((screen_y_resolution / 2)* aspect ratio)
+/ screen_x_resolution) * dx</FONT>
+
+<P><I><FONT COLOR="#FFFF99">Now everything is correct and our 3D clipper
+will be clipping to screen boundaries also ;)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">NB: Calculate the dx,dy and aspect ratios at
+initalisation or when ever the field of view changes.</FONT></I>
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Axial-Aligned Bounding Boxes:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">We all know what a bounding box is.&nbsp;
+Its a box that fits as tightly as a box can around an object.&nbsp; Its
+for a rough estimation of the object for use as a crude early out method
+of culling and other such things. You can use spheres or boxes or both.&nbsp;
+Lets concern ourselves with just boxes here.&nbsp; An axial-aligned bounding
+box is basically a box aligned with your x, y and z axis vectors.&nbsp;
+To calculate an axial-aligned bounding box you take the objects vertices
+in whatever space its defined (normally object space) and find the maximum
+and minimum x, y and z values of its vertices. With this you have 6 values.</FONT></I>
+
+<P><FONT COLOR="#33CCFF">MinX, MaxX</FONT>
+<BR><FONT COLOR="#33CCFF">MinY, MaxY</FONT>
+<BR><FONT COLOR="#33CCFF">MinZ, MaxZ</FONT>
+
+<P><I><FONT COLOR="#FFFF99">You can construct the 8 vertices of the box
+from these.&nbsp; We can help speed up our 3D engine by saying, if this
+box is totally outside view volume ignore the object completly, if this
+box is totally inside view volume then accept the object and don't even
+perform a clipping test on it. Just the normal backface culling and thats
+all.&nbsp; If this box is partially inside and outside then the object
+will require testing for clipping.&nbsp; The thing is, an axial aligned
+bounding box can be tested against the view volume when we use our fast
+90degree FOV very easily.&nbsp; All you need to do is this:</FONT></I>
+<BR>&nbsp;
+
+<P><FONT COLOR="#33CCFF">&nbsp;// Is object totally outside view?</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;if(MaxX &lt; -MaxZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp; return OUTSIDE_VIEW;</FONT>
+
+<P><FONT COLOR="#33CCFF">&nbsp;if(MinX >&nbsp; MaxZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp; return OUTSIDE_VIEW;</FONT>
+
+<P><FONT COLOR="#33CCFF">&nbsp;if(MaxY &lt; -MaxZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp; return OUTSIDE_VIEW;</FONT>
+
+<P><FONT COLOR="#33CCFF">&nbsp;if(MinY >&nbsp; MaxZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp; return OUTSIDE_VIEW;</FONT>
+
+<P><FONT COLOR="#33CCFF">&nbsp;// Is object partially inside view?</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;if(MinX &lt; -MinZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; return CLIP_TIME_FOLKS;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;if(maxx >&nbsp; MinZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; return CLIP_TIME_FOLKS;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;if(miny &lt; -MinZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; return CLIP_TIME_FOLKS;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;if(maxy >&nbsp; MinZ)</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; return CLIP_TIME_FOLKS;</FONT>
+<BR>&nbsp;
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">However, our axial-aligned bounding box is
+defined in object space, we are in camera space.&nbsp; If we transform
+the bounding box by the transform matrix to get it in camera space its
+no longer axial-aligned.&nbsp; We need then to regenerate our Min and Max
+values.&nbsp; No problem.&nbsp; Here is a simple way to do it:</FONT></I>
+<BR>&nbsp;
+
+<P><FONT COLOR="#33CCFF">&nbsp;TransformVector(bounding_box_vertices[0],
+xform_matrix);</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;MinX = MaxX = bounding_box_vertices[0].X;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;MinY = MaxY = bounding_box_vertices[0].Y;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;MinZ = MaxZ = bounding_box_vertices[0].Z;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;for(i=1; i&lt;8; i++) {</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; TransformVector(bounding_box_vertices[i],
+xform_matrix);</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; if(bounding_box_vertices[i].X
+> MaxX) MaxX = bounding_box_vertices[i].X;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; if(bounding_box_vertices[i].X
+&lt; MinX) MinX = bounding_box_vertices[i].X;</FONT>
+
+<P><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; if(bounding_box_vertices[i].Y
+> MaxY) MaxY = bounding_box_vertices[i].Y;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; if(bounding_box_vertices[i].Y
+&lt; MinY) MinY = bounding_box_vertices[i].Y;</FONT>
+
+<P><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; if(bounding_box_vertices[i].Z
+> MaxZ) MaxZ = bounding_box_vertices[i].Z;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp; if(bounding_box_vertices[i].Z
+&lt; MinZ) MinZ = bounding_box_vertices[i].Z;</FONT>
+<BR><FONT COLOR="#33CCFF">&nbsp;}</FONT>
+<BR>&nbsp;
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Now we can perform the tests above.&nbsp; Another
+way to regenerate an axial- aligned bounding box is given in Graphics Gems
+I.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Use spheres also, its just a single check.&nbsp;
+A non axial-aligned box may fit better, just play around till you have
+what suits you.</FONT></I>
+<BR>&nbsp;
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Any FOV Will Do:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Hrm, 90degrees for a field of view is fine
+for most things.&nbsp; However, maybe for some effects or because you have
+a nice 3DS mesh being imported and it contains the infamous FOV track or
+whatever, a 90degree FOV is not available to you.&nbsp; Can you perform
+all this fast clipping with any old FOV? The answer is quite simply YES!
+The idea is to warp your space to an effective 90degree FOV.&nbsp; Many
+people have difficulties to understand this warping but all it boils down
+to is a simple scale of the X and Y components of your vertices :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Okay, you know I just said that warping your
+FOV so it becomes effectivly 90degrees yet in reality it is still the normal
+FOV just that everything is scaled occoringly.&nbsp; This is done by scaling
+the X and Y components of your points.&nbsp; Well, lets look at the matrix
+for performing this:</FONT></I>
+<BR>&nbsp;
+
+<P><TT>&nbsp;<FONT COLOR="#33CCFF">d/h&nbsp; 0&nbsp;&nbsp; 0&nbsp;&nbsp;
+0</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp; 0&nbsp; d/h&nbsp; 0&nbsp;&nbsp; 0&nbsp;
+= Perspective Matrix</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp; 0&nbsp;&nbsp; 0&nbsp;&nbsp; 1&nbsp;&nbsp;
+0</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp; 0&nbsp;&nbsp; 0&nbsp;&nbsp; 0&nbsp;&nbsp;
+1</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">d is the distance from the screen, we calculated
+to compensate for aspect ratio and x and y resolutions.&nbsp; We called
+them dx and dy.&nbsp; The value h is the height of the view plane.&nbsp;
+Now, we use our screen as the view plane so h is the screen dimensions.&nbsp;
+Lets rewrite this then:</FONT></I>
+
+<P><FONT COLOR="#33CCFF">hx = screen_x_resolution / 2</FONT>
+<BR><FONT COLOR="#33CCFF">hy = screen_y_resolution / 2</FONT>
+
+<P><TT><FONT COLOR="#33CCFF">&nbsp; dx/hx&nbsp; 0&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;
+0</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp; 0&nbsp;&nbsp; dy/hy&nbsp; 0&nbsp;&nbsp;
+0&nbsp; = Perspective Matrix</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+1&nbsp;&nbsp; 0</FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp; 1</FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">This is the warp matrix.&nbsp; If you take
+your transformation matrix that takes an object from object space through
+to camera space then multiply it with this perspective matrix then now
+the transform will include the warping.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Thats it!</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now you have easy 3D clipping with no problems
+using any FOV.&nbsp; No sign of homogeneous coordinates at all.</FONT></I>
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Optimizations:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">A few obvious optimises for you:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">- Use a bounding box at an early stage to eliminate
+totally hidden objects.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">- If object is totally within view, flag object
+and don't bother with a 3D clipping test.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">- Perform backface culling in object space
+before clipping and only transform visable faces.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">- Flag any vertices/faces that require clipping
+and what planes they need clipping too.&nbsp; This will avoid any unnessecary
+checks, xforms and projections&nbsp;&nbsp; later on.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">- Oh yes, code it in assembly language.&nbsp;
+Not that this is really needed but hell, I would.</FONT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Need I say anymore?&nbsp; The rest is left
+to you :)</FONT></I>
+
+<P>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00">&nbsp;frenzy</FONT></I></B>
+<BR><B><I><FONT COLOR="#FFCC00">&nbsp;p.adams@wlv.ac.uk</FONT></I></B>
+<BR><B><I><FONT COLOR="#FFCC00">&nbsp;"...code is art..."</FONT></I></B>
+<BR><B><I>&nbsp;</I></B>
+<CENTER><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+
+</BODY>
+</HTML>

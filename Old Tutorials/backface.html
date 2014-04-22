@@ -1,0 +1,115 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="frenzy">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>Fast back face removal</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<HR WIDTH="100%"><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>Fast Backface
+Culling</FONT></FONT></I></B></CENTER>
+
+<CENTER>
+<HR WIDTH="100%"></CENTER>
+&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><FONT SIZE=+0><I><FONT COLOR="#FFFF99">One of the most usefull speed
+up tricks in many 3D engines is backface culling.&nbsp; Put simply, this
+is the process of removing any faces that are not facing the viewer.&nbsp;
+Most people are aware that by using backface culling you can roughly eliminate
+50% of faces in a scene.&nbsp; That will save you alot of work later on
+so its quite beneficial to use :)</FONT></I></FONT>
+
+<P><I><FONT COLOR="#FFFF99">There are of course fast and slow methods of
+performing this which depend upon your dataset, pipeline, etc.&nbsp; However,
+lets look at a typical engine.&nbsp; What is the best way to perform backface
+culling?</FONT></I>
+<BR>&nbsp;
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Do things early, it will
+only help later on:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">The earlier you do things, the better.&nbsp;
+This is a pipeline we are talking about.&nbsp; As you complete one stage
+you move the data on to the next stage.&nbsp; Sounds logical then to reduce
+the amount of data being moved around.&nbsp; So, if you can eliminate 50%
+of your faces at the earliest time possible in the pipeline then you reduce
+the work load of the following stages.&nbsp; Great! So, simply, we want
+to do backface culling in object space.&nbsp; This will mean we only transform
+visable faces/vertices and thus save us alot of work later on in say, clipping,
+lighting, etc.</FONT></I>
+<BR>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>How to do it:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">We need to do the following steps:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">1) Transform the camera position into object
+space</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">2) For every face in object:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp; 2.1) Make a vector from
+the camera to a point on the face (a vertex)</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp; 2.2) Perform dot produce
+on this vector with the face normal</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp; 2.3) If dot product result
+is greater than 0, face is visable.</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If dot product result is 0, face is side on.</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+If dot product result is less than 0, face is hidden.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Notice that we don't need to normalise the
+vector we have made in step 2.1.&nbsp; Thats because we are only interested
+in the sign of the dot product so magnitude does not effect anything.&nbsp;
+Remember, normalising a vector does not effect its sign!</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">This is very simple.. Here is some sample code:</FONT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">// m = object matrix:</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">// subtract object position first:</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">x = camera->position.x - m[TX];</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">y = camera->position.y - m[TY];</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">z = camera->position.z - m[TZ];</FONT></TT></I>
+
+<P><I><TT><FONT COLOR="#33CCFF">// multiply by inverse of object matrix
+by doing a matrix/vector multiply in transpose order:</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">pos.x = x*m[XX] + y*m[YX] + z*m[ZX];</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">pos.y = x*m[XY] + y*m[YY] + z*m[ZY];</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">pos.z = x*m[XZ] + y*m[YZ] + z*m[ZZ];</FONT></TT></I>
+<BR>&nbsp;
+
+<P><I><TT><FONT COLOR="#33CCFF">for(i=0; i&lt;obj->num_faces; i++) {</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+v1 = face->v1; // index to vertex 1 on face</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ex = pos.x - vertex[v1].x;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ey = pos.y - vertex[v1].y;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ez = pos.z - vertex[v1].z;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+d = ex*normalF->x + ey*normalF->y + ez*normalF->z;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(d>0.0) {</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// flag face as visable:</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+face++;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+normalF++;</FONT></TT></I>
+<BR><I><TT><FONT COLOR="#33CCFF">}</FONT></TT></I>
+
+<P><I><FONT COLOR="#FFFF99">And that fokes... Is all there is to it :)</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00">frenzy</FONT></I></B>
+<BR><B><I><FONT COLOR="#FFCC00">"...code is art..."</FONT></I></B>
+<BR><B><I><FONT COLOR="#FFCC00">p.adams@wlv.ac.uk</FONT></I></B>
+<CENTER><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+
+</BODY>
+</HTML>

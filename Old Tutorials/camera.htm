@@ -1,0 +1,186 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="-">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>camera</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<HR WIDTH="100%"><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>Camera Matrix
+Transformations</FONT></FONT></I></B></CENTER>
+
+<HR WIDTH="100%">
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">In any 3D world you really need a way of looking
+in it.&nbsp; Its quite natural here to use a camera system.&nbsp; If you
+are confused about matrices, spaces and transformations please read a matrix
+tutorial first.&nbsp; The idea is rather simple however :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Assuming you know about spaces lets define
+a camera:</FONT></I>
+
+<P><I><FONT COLOR="#66FFFF">Camera Position</FONT></I>
+<BR><I><FONT COLOR="#66FFFF">Camera Target Position (focal point)</FONT></I>
+<BR><I><FONT COLOR="#66FFFF">Camera Roll Angle</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">If your familiar with 3D Studio, you will know
+that it uses this system for defining a camera.&nbsp; The question is how
+to convert this information into a transformation matrix.</FONT></I>
+
+<P>&nbsp;
+<BR><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Building a Camera Matrix:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Our camera matrix can be described by the
+following:</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>[C] = [T] * [R]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">This says the camera matrix, [C], is the result
+of first a translation and then a rotation.&nbsp; Imagine our camera is
+at position (10,10,10) in world space.&nbsp; We therefore need to translate
+the world by (-10,-10,-10).&nbsp; This effectivly means the camera is now
+centered at the origin, (0,0,0) and everything else is moved in relation
+to it.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">The next step is rotation.&nbsp; After we have
+translated to the world we need to rotate it relative to where the camera
+is looking.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">The first step is simple.&nbsp; We know the
+camera's position so we can build a translation matrix:</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>Let Camera Position = [cx, cy,
+cz]</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+1&nbsp;&nbsp; 0&nbsp;&nbsp; 0&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>[T] = 0&nbsp;&nbsp; 1&nbsp;&nbsp;
+0&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp; 0&nbsp;&nbsp; 1&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; -cx
+-cy -cz&nbsp; 1</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Building the rotation matrix is a bit more
+involved since normally when we build a rotation matrix we know the angles
+of rotation around each axis.&nbsp; In this case we don't.&nbsp; Another
+way of thinking of a rotation matrix however is a set of axis vectors orientated
+in world space.&nbsp; Thinking of a rotation matrix in this sense makes
+it easier to understand how we derive the rotation matrix for a camera.&nbsp;
+We build the camera's axis vectors in world space and plug them directly
+into the matrix.&nbsp; Lets see how its done in all its glory:</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>z-axis = | Target - Position
+|</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>yref&nbsp;&nbsp; = [0,1,0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>y-axis = | z-axis X (yref X
+z-axis) |</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>x-axis = y-axis X z-axis</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>| | = normalise vector</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;X&nbsp; = cross product</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">You may notice an extra vector called yref
+used.&nbsp; This is because we need two vectors to generate a vector perpendicular.&nbsp;
+If we guess at one and generate a third using the cross product we can
+correct it by performing another cross product.&nbsp; The guessed vector
+however is interesting.&nbsp; If the z-axis vector is the same as the yref
+vector the cross product will result in zero and cause some degenerate
+case.&nbsp; A simple solution is to check the z-axis vector and set the
+yref vector to point in an opposite direction.&nbsp; Anyway, now we plug
+in the axis vectors into the matrix and bingo.&nbsp; We have almost done
+it :)</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+x-axis.x&nbsp;&nbsp; y-axis.x&nbsp;&nbsp; z-axis.x&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>[R] =&nbsp; x-axis.y&nbsp;&nbsp;
+y-axis.y&nbsp;&nbsp; z-axis.y&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+x-axis.z&nbsp;&nbsp; y-axis.z&nbsp;&nbsp; z-axis.z&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Finally, we have a roll angle.&nbsp; This relates
+to rolling the camera around its z-axis.&nbsp; We can build a rotation
+matrix for rotation around the z-axis no problem and simply multiply it
+by our matrix, R.</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+cos(RollAngle)&nbsp; sin(RollAngle)&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>[Roll] =&nbsp; -sin(RollAngle)&nbsp;
+cos(RollAngle)&nbsp;&nbsp; 0&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 1</FONT></FONT></TT>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Our final camera matrix is now defined as:</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>[C] = [T] * [R] * [Roll]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Congratulations, we have finished :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now with our newly built transformation matrix
+we can take anything out of world space into camera space, project and
+hey presto, we see through the camera.</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>The View Volume:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">You see alot of talk of this in 3D clipping.&nbsp;
+People call it the view frustrum and there are several spellings to it.&nbsp;
+To avoid confusion I'll call it view volume because its easier to type
+and spell :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">The point of this is it describes the volume
+of space the camera can see.&nbsp; The volume you can see depends on several
+things.&nbsp; Most noticable is the camera's lens.&nbsp; Different lenses
+give different fields of view.&nbsp; Ahh another term.&nbsp; The field
+of view is an angle.&nbsp; Look at this diagram:</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>invisable&nbsp; \visable /&nbsp;
+invisable</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; /</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp;&nbsp;&nbsp; /</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\&nbsp; /</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+\/</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+camera</FONT></FONT></TT>
+<BR><I><FONT COLOR="#FFFF99">&nbsp;</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">Even your eye's have a field of vision.&nbsp;
+I'm not sure but its roughly 60degree's.&nbsp; It varies between people.&nbsp;
+Put your hand infront of you and move it to the left until it goes out
+of view.&nbsp; Anyway, when you have your objects all transformed into
+camera space its quite obvious that unless they fall within this field
+of vision they won't actually be visable.&nbsp; Which means we don't draw
+them.&nbsp; In 3D Studio the field of vision is not stored.&nbsp; However,
+the lens type is stored.&nbsp; The relationship between them is:</FONT></I>
+
+<P><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2400.0</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>fov = --------</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#66FFFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+focus</FONT></FONT></TT>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Final Words:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">This is just a quick article to refresh your
+little minds.&nbsp; You should know read the 3D Clipping article to put
+everything together :)</FONT></I>
+<BR>&nbsp;
+<CENTER><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+&nbsp;
+</BODY>
+</HTML>

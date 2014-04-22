@@ -1,0 +1,375 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="frenzy">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>splines</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<HR WIDTH="100%"><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>Splines for
+Keyframe Animations</FONT></FONT></I></B></CENTER>
+
+<HR WIDTH="100%">
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">I'm sure you are all aware of what keyframing
+is.&nbsp; Instead of covering that lets cover a method for smootly interpolating
+movement for say an objects position.&nbsp; Lets say you have specified
+several KEY frames for an objects position and you want the object to move
+smoothly through these key positions to its destination.&nbsp; The way
+to achieve this is through interpolation.&nbsp; The trouble with linear
+interpolation is that it does not give realistic movements in certain circumstances.&nbsp;
+The most popular example of this is throwing up a ball.&nbsp; The ball
+is thrown, gravity acts as a downward acceleration and so when the ball
+reaches a certain height it starts to accelerate downwards back to ground.&nbsp;
+If you plot the path of the ball over time it would not be a linear graph.&nbsp;
+It would be parabolic which is a curve.&nbsp; I hope that makes sense.&nbsp;
+Anyway, enough of the basics, lets introduce splines.&nbsp; However, before
+I do let me first discuss linear interpolation.&nbsp; I will derive the
+formula for linear interpolation using the terminology given in most text
+books when refering to splines.&nbsp; The reason why I give you this is
+because when applied to linear interpolation its very much easier to follow.&nbsp;
+Once you follow it for linear interpolation, doing it for splines is simple.&nbsp;
+Don't worry, it will all make sense :)</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Linear Interpolation:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Lets say I wish to interpolate along a line
+given a parameter, t, which represents where along the line we are.&nbsp;
+You can think of this parameter as time.&nbsp; A line can be represent
+by this equation:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = At + B&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(eq 1.0)</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>where 0 &lt;= t &lt;= 1,&nbsp;
+t in range 0..1</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">This is a linear equation and the coefficents
+A and B are unknown.&nbsp; Now, first of all lets write this in matrix
+form.&nbsp; Writing things in matrix form makes it much easier to write
+for me, solve and other things.&nbsp; You will soon see why..&nbsp; You
+find this notation in most books on the subjects also.&nbsp; Books probably
+use this form to save paper also, hehe ;)</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>T = [t&nbsp; 1]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>C = [ A ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ B ]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = T . C</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">If you multiply these out you will get the
+equation in (eq 1.0).&nbsp; Nothing has changed we have just altered the
+way to write the things down.&nbsp; If you are a bit shakey on this terminology
+just read it over and over and multiply it out until you get it.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now, our unknowns in this are the coefficients
+which are stored in the column vector C.&nbsp; We need to find these unknowns
+before we are able to do anything.&nbsp; Lets rewrite C to this:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>C = M . G</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">This gives a final equation:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = T . M . G</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Here, M is the basis matrix and G is the geometric
+constraints vector.&nbsp; What do those mean you might ask.&nbsp; Well,
+lets first talk about the geometric constraints vector.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">We want to interpolate along this line.&nbsp;
+What do we need to know before we can interpolate?</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">The answer is we need to know the start and
+end points on the line.&nbsp; Make sense huh?&nbsp; If we don't know these
+what are we going to interpolate</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">between.&nbsp; These observations we shall
+call geometric constraints.&nbsp; This is basically how we shall define
+our line and how we interpolate it.&nbsp; Lets define these geometric constraints
+then.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">We need a start point, P1 and an end point,
+P2.&nbsp; So, our geometric constraints vector is:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>G = [ P1 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ P2 ]</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">When we are at t=0, we are at P1 and when we
+are at t=1, we are at P2.&nbsp; Lets substitute t in to our equation:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>T = [t&nbsp; 1]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>when t = 0:</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(0) = [0&nbsp; 1] . M . G</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; =
+P1</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>when t = 1:</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(1) = [1&nbsp; 1] . M . G</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; =
+P2</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">In other words:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>G = [0&nbsp; 1] . M . G</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [1&nbsp;
+1]</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">We need to find M, which is unknown.&nbsp;
+It is quite obvious that if we make M the inverse of T shown above we will
+satisfy the equation since a matrix multipled by its inverse gives the
+identity matrix and anything multiplied by an identity matrix, in this
+case G, is itself.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">So, M is simply the inverse of T.</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>M = T^-1 = [-1&nbsp; 1]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(see article on matrix maths to find out how to get inverse)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[ 1&nbsp; 0]</FONT></TT></FONT>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">Now, lets put our equation in normal form again
+to see what it gives us:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = T . M . G</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>T = [t&nbsp; 1]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>M = [-1&nbsp; 1]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ 1&nbsp;
+0]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>G = [ P1 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ P2 ]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = (t*-1 + 1*1)*P1&nbsp;&nbsp;
++ (t)*P2</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; =
+(1 - t)*P1 + (t)*P2</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Well well well.. That is our standard linear
+interpolation formula.&nbsp; All this nasty calculation has just derived
+it for us.&nbsp; Why have I taken you through this?&nbsp; Well, curves
+are just a generalisation of this approach.&nbsp; The only thing that changes
+in deriving the formula for a spline is you have a few more geometric constraints.&nbsp;
+Infact, you have four geometric constraints because their are four unknows.&nbsp;
+Here we had two constraints.&nbsp; A start point and an end point. There
+were also only two unknowns.&nbsp; Things always fall into place don't
+they ;)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now you should read through the steps I have
+described because I will cover splines a bit faster using the same approach.</FONT></I>
+<BR>&nbsp;
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Splines:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">I'll spare you all the history of why they
+are called splines but basically, a spline is nothing more than a polynomial
+with some way to control the shape of the curve it produces.&nbsp; For
+most applications a 3rd degree polynomial is used.&nbsp; That is a cubic
+equation of this form:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = At^3 + Bt^2 + Ct + D</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>where 0 &lt;= t &lt;= 1&nbsp;
+(t in range 0..1)</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Again, in matrix form we have:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = T . M . G</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>T = [t^3&nbsp; t^2&nbsp; t&nbsp;
+1]</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Now, this is where I jump to the geometric
+constraints vector.&nbsp; This is unique for different types of splines.&nbsp;
+I am talking about keyframing here so I'll use the spline that most people
+use, the hermite curve.</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Hermite Curve:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">This curve is controlled by a start point,
+end point and tangent vectors at the start and end points of the curve.&nbsp;
+The curve passes through the start and end point and the tangent vectors
+control the veleocity at the start and end points and also the direction.&nbsp;
+You can probably guess that working out the shape of curve is not so natural
+since it all depends on the tangent vectors.&nbsp; We shall get to this
+later.&nbsp; First, lets describe our geometric constraints:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>G = [ P1 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ P4 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ R1 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ R4 ]</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">P1 is the start point, P4 is the end point.&nbsp;
+R1 is the tangent vector at the start and R4 is the tangent vector at the
+end.</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>When t = 0, we are at P1:</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>T = [t^3&nbsp; t^2&nbsp; t&nbsp;
+1]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(0) = [0 0 0 1] . M . G</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; =
+P1</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>When t = 1, we are at P2:</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(1) = [1 1 1 1] . M . G</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; =
+P2</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">The tangent to a curve at position t is the
+differential of the curve.&nbsp; You should know a bit of calculus for
+this but its very simple:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Differential of the cubic is:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x'(t) = 3t^2 + 2t + 1</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">So, substitue t = 0 and we have:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x'(0) = [0&nbsp; 0&nbsp; 1&nbsp;
+0] . M . G</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= R1</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x'(1) = [1&nbsp; 1&nbsp; 1&nbsp;
+0] . M . G</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+= R4</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">M is inverse of T so M is now:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>M = T^-1 = [ 2 -2&nbsp; 1&nbsp;
+1]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[-3&nbsp; 3 -2 -1]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[ 0&nbsp; 0&nbsp; 1&nbsp; 0]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[ 1&nbsp; 0&nbsp; 0&nbsp; 0]</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Finally, in normal form we get:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = T . M . G</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>T = [t^3&nbsp; t^2&nbsp; t&nbsp;
+1]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>M = [ 2 -2&nbsp; 1&nbsp; 1]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [-3&nbsp;
+3 -2 -1]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ 0&nbsp;
+0&nbsp; 1&nbsp; 0]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ 1&nbsp;
+0&nbsp; 0&nbsp; 0]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>G = [ P1 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ P4 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ R1 ]</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [ R4 ]</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = (2t^3 - 3t^2 + 1)*P1&nbsp;
++ (-2t^3 + 3t^2)*P4 + (t^3 - 2t^2 + t)*R1 + (t^3 - t^2)*R4</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">And that is our final spline interpolation
+formula for hermite curves!!! Phew.. Hope you followed =)</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Implementation:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Okay, we have covered a quick derivation of
+splines.&nbsp; You can create many types of spline just by changing the
+matrix M.&nbsp; This basis matrix is what makes it all happen.&nbsp; For
+keyframe animations its best to use the hermite curve.&nbsp; Let me give
+you the full equations in long form so you can see it easily.&nbsp; Extended
+to 3D of course :)</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>x(t) = (2t^3 - 3t^2 + 1)*P1x&nbsp;
++ (-2t^3 + 3t^2)*P4x + (t^3 - 2t^2 + t)*R1x + (t^3 - t^2)*R4x</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>y(t) = (2t^3 - 3t^2 + 1)*P1y&nbsp;
++ (-2t^3 + 3t^2)*P4y + (t^3 - 2t^2 + t)*R1y + (t^3 - t^2)*R4y</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>z(t) = (2t^3 - 3t^2 + 1)*P1z&nbsp;
++ (-2t^3 + 3t^2)*P4z + (t^3 - 2t^2 + t)*R1z + (t^3 - t^2)*R4z</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">How do we use this then?&nbsp; Well, you know
+P1 and P4.&nbsp; They are your start and end positions that your interpolating
+between.&nbsp; They are the key frame positions that you have.&nbsp; The
+problem is how you calculate R1 and R4.&nbsp; As I mentioned, they control
+the shape of the curve.&nbsp; The magnitude of them controls the velocity
+of the curve.&nbsp; We need an easy was for the animator to control the
+curve.&nbsp; Lets introduce the TCB system to you.</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>TCB System, Tension, Continuity,
+Bias.</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">This is a system to calculate R1 and R4 using
+three parameters known as Tension, Continuity and Bias.&nbsp; Those three
+parameters together with the key positions generate R1 and R4 for using
+in the equation above.&nbsp; This was developed by Kochanek and Bartels.&nbsp;
+Lets just tell you what they say:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">The tangent vector Ri at point Pi is:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>Let: t = tension, b = bias,
+c = continutiy:</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1-t)(1+b)(1+c)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1-t)(1-b)(1-c)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>Ri =&nbsp; ---------------*(Pi
+- P(i-1))&nbsp; +&nbsp; ---------------*(P(i+1) - Pi)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>And the tangent vector at R(i+1)
+at point P(i+1) is:</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1-t)(1+b)(1-c)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+(1-t)(1-b)(1+c)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>R(i+1) =&nbsp; ---------------*(Pi
+- P(i-1))&nbsp; +&nbsp; ---------------*(P(i+1) - Pi)</FONT></TT></FONT>
+<BR><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2</FONT></TT></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><TT><FONT SIZE=+1>t, b and c are values in range
+of 0..1.</FONT></TT></FONT>
+
+<P><I><FONT COLOR="#FFFF99">The parameters effect the shape of the curve
+in different ways.&nbsp; Its easier to see than show.&nbsp; I'm assuming
+you all have 3D Studio.&nbsp; You can play with the TCB values their to
+gain an understanding on how the parameters effect the curve.&nbsp; You
+can default them to 0 if you like.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Anyway, the equation for Ri is calculated for
+R1 and Ri+1 is calculated for R4.&nbsp; You can see that you need the current
+key frame position, Pi, and the previous and next.&nbsp; For each key frame
+position you must calculate an R1 and R4.&nbsp; This is fine but what about
+if you have say 10 key frame positions.&nbsp; What do you do at the first
+keyframe position and the last key frame position.&nbsp; In those cases
+there are NO previous or next key frames to use when generating the tangent
+vectors.&nbsp;&nbsp; Thats quite a problem.&nbsp; I am not sure the exact
+method 3DS uses for this special case.&nbsp; If you have the formula's
+please send them me via email or ICQ so I may include them here.</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Final Words</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">I hope this article helps you understand derivations
+in many text books.&nbsp; I included the derivation because some people
+have a hard time accepting things straight off.&nbsp; I'm no maths wizard.&nbsp;
+Until the next article.&nbsp; Have a nice day ;)</FONT></I>
+
+<P><I><FONT COLOR="#FFCC00">frenzy</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">"...code is art..."</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">p.adams@wlv.ac.uk</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">ICQ: 48394851</FONT></I>
+<BR>&nbsp;
+<CENTER><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+&nbsp;
+<BR>&nbsp;
+</BODY>
+</HTML>

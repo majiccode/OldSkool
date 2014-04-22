@@ -1,0 +1,130 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="frenzy">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>Efficient Sorting</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<HR WIDTH="100%"><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>Efficient Sorting</FONT></FONT></I></B></CENTER>
+
+<HR WIDTH="100%">
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Often its desirable to sort your polygons
+in order, maybe back to front or front to back.&nbsp; You all know painters
+algorithm.&nbsp;&nbsp; The trouble with relying just on painters algorithm
+is that sorting polygons say on just their average Z value does not yeild
+a perfect sorted set.&nbsp; If you don't have say BSP's at your disposal
+then a non perfect set is still beter than no set at all :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">For example, lets say you wish to use a zbuffer
+to render your scene.&nbsp; Well, you don't need to sort polygons at all
+in this case but look at all that overdraw that could happen.&nbsp; If
+you sorted your faces front to back before throwing them at the zbuffer
+you will reduce the overdraw alot and thus gain a nice speed boost :)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Lets say your doing a simple 3D engine with
+no zbuffer.&nbsp; You may wish to perform back to front sorting and that
+is fine in say a demoscene production such as a 64k intro.&nbsp; I have
+rather good results with using just painters algorithm with a fly through
+of a 3D world done in 3DS.&nbsp; So, basically what I'm saying is this.&nbsp;
+Sorting is very usefull.. Now, how do we perform a fast sort.&nbsp; Oh
+its so simple :)</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>What method shall we use:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">There are a number of sorting methods about.&nbsp;
+Here are the most well known:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Bubble Sort</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">Quick Sort</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">Radix Sort</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">The first one, bubble sort, is how can I say..
+Rubbish! Well, unless you have less than 10 faces at least :)&nbsp; Quicksort
+is often used and is a pretty fast sorting scheme.&nbsp; Radix sort is
+slightly better for 3D engines and I used it in my engines all the time.&nbsp;
+However, although its good its not quite as good as the method I'll introduce.&nbsp;
+I won't describe any of the above sorting algorithms to you, I'll leave
+you to find information on them.&nbsp; Lets introduce the sorting scheme
+we will be using.&nbsp; The hash table sort.</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>The Hash Table Sort:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">This is probably more commonly known as "ordering
+tables" and was used in the PSX so I'm told.&nbsp; Well, I prefer to call
+it a hash table sort.&nbsp; Its very simple so I'll quickly describe what
+you do:</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">1) Divide average Z value of face by some constant.</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">2) Use average Z value as index into a table
+of face pointers.</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">3) If a pointer to a face already exists in
+table, set pointer in face structure to point to this face and replace
+pointer in table with current face.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Its easier to show, so here's is some simple
+code:</FONT></I>
+
+<P><FONT COLOR="#33CCFF"><I><TT>#define SORT_SCALE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+0.2</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>#define SORT_TABLE_SIZE&nbsp;&nbsp;&nbsp;
+4096</TT></I></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><I><TT>typedef struct tFACE {</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; // face data</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+average_z;</TT></I></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; // pointer to next face:</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; struct tFACE&nbsp;&nbsp;&nbsp;
+*next;</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>}&nbsp;&nbsp; FACE;</TT></I></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><I><TT>FACE *sort_table[SORT_TABLE_SIZE];</TT></I></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><I><TT>AddFaceToTable(FACE *face)</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>{</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;
+index;</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; index = face->average_z
+* SORT_SCALE;</TT></I></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; if(index>=0 &amp;&amp;
+index&lt;SORT_TABLE_SIZE) {</TT></I></FONT><FONT COLOR="#33CCFF"></FONT>
+
+<P><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// does a face pointer already exist at this location</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(sort_table[index])</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+face->next = sort_table[index];</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+sort_table[index] = face;</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>&nbsp;&nbsp;&nbsp; }</TT></I></FONT>
+<BR><FONT COLOR="#33CCFF"><I><TT>}</TT></I></FONT>
+
+<P><I><FONT COLOR="#FFFF99">Remember, the sort_table should be initalised
+with NULL.&nbsp; The value SORT_SCALE is the constant I mentioned earlier
+and that is just a way to reduce the size of the sort_table.&nbsp; The
+smaller the sort table the more collisions you will get.&nbsp; These values
+are quite optimal I found.&nbsp; However, change them to see how performance
+is effected for you.&nbsp; As you can see, this is a rather simple routine
+:)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">I hope this helps speed up your 3D engines
+in some way..</FONT></I>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFCC00">frenzy</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">p.adams@wlv.ac.uk</FONT></I>
+<CENTER><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+
+</BODY>
+</HTML>

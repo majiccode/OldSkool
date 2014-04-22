@@ -1,0 +1,404 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="frenzy">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.05 [en] (Win95; I) [Netscape]">
+   <TITLE>Matrix Operations - frenzy's codebase</TITLE>
+</HEAD>
+<BODY TEXT="#000000" BGCOLOR="#000066" LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
+
+<CENTER>
+<HR WIDTH="100%"><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+4>Matrix Operations</FONT></FONT></I></B></CENTER>
+
+<CENTER><B><I><FONT COLOR="#FFCC00">Your guide to the world of matrices</FONT></I></B>&nbsp;
+<HR WIDTH="100%"></CENTER>
+
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Introduction:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Matrices are a very useful way to represent
+systems of equations.&nbsp; By hand they are quite awkward but when you
+come to programming they are perfect tools.&nbsp; I hope you know what
+a matrix is.&nbsp; If not I'll simply describe it to you.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">A matrix is nothing more than an array of numbers.&nbsp;
+This is typically of size NxM.&nbsp; In most applications you use 2x2,
+3x3 or 4x4 matrices.&nbsp; Obviously, these are square matrices (same number
+of rows as columns) but you don't have to have square matrices.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">As with all mathematics we can perform the
+usual operations on our matrix.&nbsp; For example, we can multiply two
+matrices together, add them, etc.&nbsp; However, to do these operations
+you must follow some rules as always ;)</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Before we look at some of the most common operations
+we perform on matrices lets look at some special matrix forms you will
+need to know about.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">I could go on and describe matrices to you
+and all operations but instead you can download the matrix FAQ here:&nbsp;</FONT></I>
+<A HREF="MATFAQ.TXT">MATRIX FAQ</A>
+
+<P><I><FONT COLOR="#FFFF99">This is an excellent resource of information.&nbsp;
+There are a few things that I will cover though that are very usefull.</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Inverse of matrices with determinant
+of 1:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">A matrix with a determinant of 1 has a special
+property.&nbsp; It's inverse can be calculated by simply transposing it.&nbsp;
+This is true for 3x3 rotation matrices.&nbsp; This means you have a very
+fast way to get the inverse with hardly no work :)</FONT></I>
+<BR>&nbsp;
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Gaussian Elimination:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">This is a method of generating the inverse
+of an arbatary size matrix.&nbsp; This is very usefull for say 4x4 matrices
+or for solving simultaneous equations.&nbsp; To describe it it's easier
+to talk about simultaneous equations.&nbsp; Lets look at the following:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>2A + 3B + C = 17&nbsp;&nbsp;&nbsp;
+(1)</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;A + 2B + C = 12&nbsp;&nbsp;&nbsp;
+(2)</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;A +&nbsp; B +2C = 13&nbsp;&nbsp;&nbsp;
+(3)</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Here we wish to find the unknowns, A, B and
+C.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">One way of doing this is by multiplying each
+equation by some value and subtracting two equations to eliminate values.&nbsp;
+Finally substution to get the unknowns.&nbsp; Lets work out A, B and C.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Subtract (3) from (2) to give:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>2A + 3B + C = 17</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+B - C = -1</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;A +&nbsp; B +2C = 13</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Multiply (3) by 2 and subtract (1) from (3)</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>2A + 3B + C = 17</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+B - C = -1</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp; -B
++ 3C= 9</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Add (3) and (2)</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>2A + 3B + C = 17</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+B - C = -1</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+2C = 8</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Now, if we back substute we find that:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>C = 8/2</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp; = 4</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>B = -1 + 4</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp; = 3</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>A =(17-9-4) / 2</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp; = 2</FONT></FONT></TT>
+<BR>&nbsp;
+
+<P><I><FONT COLOR="#FFFF99">What we did to find the unknowns A, B and C
+was to eliminate A in the second equation and A and B in the third equation.&nbsp;
+If we put those equations in matrix form we get:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[2 1 1]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[A&nbsp; B&nbsp; C] . [3 2
+1] = [17 12 13]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1 1 2]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">At the end of the elimination phase, before
+we did the substituion we got:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[2&nbsp; 0&nbsp; 0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[A&nbsp; B&nbsp; C] . [3&nbsp;
+1&nbsp; 0] = [17 -1 8]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1 -1&nbsp; 2]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Notice the values above the matrices diagnal
+are zero?&nbsp; Thats clue number one!&nbsp; We must make the values above
+the diagnal zero.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Once we have done this we need to back substitue
+the values.&nbsp; We started by finding C and using that to find B which
+then allowed us to find A.&nbsp; We found that C was equal to 4.&nbsp;
+Well, at this point we have 2C = 8.&nbsp; If we divide the entire equation
+by 2 we get what C is equal too.</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[2&nbsp; 0&nbsp; 0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[A B C] . [3&nbsp; 1&nbsp;
+0] = [17 -1 4]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1 -1&nbsp; 1]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Okay, we have found C.&nbsp; Now lets find
+B.&nbsp; To do that we must subtract C from equation (2) leaving only B
+left in it.</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>B - C = -1</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">To remove C we must subtract -C from it.</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>B - C - -C = -1 - -C</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>B = -1 - -C</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp; = -1 - -4</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp; = 3</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Now we have:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[2&nbsp; 0&nbsp; 0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[A B C] . [3&nbsp; 1&nbsp;
+0] = [17 3 4]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1&nbsp; 0&nbsp; 1]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Finally, we must calculate A.&nbsp; We now
+need to subtract B and C from equation (1) to leave just A.</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>2A + 3B + C = 17</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Need to subtract 3B and C.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now we have:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[2&nbsp; 0&nbsp; 0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[A B C] . [0&nbsp; 1&nbsp;
+0] = [4&nbsp; 3&nbsp; 4]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[0&nbsp; 0&nbsp; 1]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">And if we the divide the entire column by 2
+we get:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[1&nbsp; 0&nbsp; 0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[A B C] . [0&nbsp; 1&nbsp;
+0] = [2&nbsp; 3&nbsp; 4]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+[0&nbsp; 0&nbsp; 1]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">Phew.&nbsp; We just solved it in a matrix.</FONT></I>
+
+<P><B><I><FONT COLOR="#FFCC00"><FONT SIZE=+2>Results:</FONT></FONT></I></B>
+<BR><I><FONT COLOR="#FFFF99">Okay, done! Sorry about all that derivation
+but I needed to show you it so you would understand what is happening.&nbsp;
+Now, lets look what happened in</FONT></I>
+<BR><I><FONT COLOR="#FFFF99">simple terms.&nbsp; We had the equation:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>C . M = R</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>Where C = [A B C]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [2 1 1]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>M = [3 2 1]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; [1 1 2]</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>R = [17 12 13]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">C represents the unknows which we tried to
+solve.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">We performed operations on M and the same operations
+on R.&nbsp; Once we had calculated the unknowns, M was the identity matrix
+and R represented the unknowns.</FONT></I>
+
+<P><I><FONT COLOR="#FFFF99">Now, lets look at things regards to a matrix
+inversion:</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>M . M^-1 = I</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[a b c]&nbsp;&nbsp; [j k l]&nbsp;&nbsp;&nbsp;&nbsp;
+[1 0 0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[d e f] . [m n o]&nbsp; =&nbsp;
+[0 1 0]</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>[g h i]&nbsp;&nbsp; [p q r]&nbsp;&nbsp;&nbsp;&nbsp;
+[0 0 1]</FONT></FONT></TT>
+
+<P><I><FONT COLOR="#FFFF99">We know M, and we know that if M is multipled
+by its inverse we get the identity matrix.&nbsp; So,&nbsp; we apply the
+same idea we did just with this matrix form as we perform operations on
+M we do the same operations on I.&nbsp; When M becomes the identity matrix,
+I becomes the inverse of M.&nbsp; I hope that makes sense.&nbsp; The next
+step is of course to develop an algorithm for this in C.&nbsp; I'll just
+present some source code here for you.&nbsp; It works with 4x4's by will
+work with any NxN (square) matrix with a small amount of changes ;)</FONT></I>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>typedef float MATRIX[16];&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// transformation matrix</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>// swap two rows over:</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>void SwapRows(MATRIX A, int
+row1, int row2)</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>{</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;
+tmp;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;
+i;</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; for(i=0;
+i&lt;4; i++) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+tmp = A[row1*4 + i];</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A[row1*4 + i] = A[row2*4 + i];</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A[row2*4 + i] = tmp;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; }</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>}</FONT></FONT></TT>
+<BR>&nbsp;
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>// inverse matrix</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>void InverseMatrix(MATRIX A)</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>{</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+i, j, k;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; int&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+maxrow;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp;
+maxval;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; float&nbsp;&nbsp;&nbsp;
+val;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; MATRIX&nbsp;&nbsp;
+I;</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; IdentMatrix(I);</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; maxval =
+A[0];</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; maxrow =
+0;</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; for(i=0;
+i&lt;4; i++) {</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Find row with largest value at the diagnal.</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+maxval = A[i*4 + i];</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+maxrow = i;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(j=i+1; j&lt;4; j++) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+val = A[j*4 + i];</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(fabs(val) > fabs(maxval)) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+maxval = val;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+maxrow = j;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+<BR>&nbsp;
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Swap the row with largest value with current row.</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+if(maxrow != i) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SwapRows(A, i, maxrow);</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+SwapRows(I, i, maxrow);</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Divide the entire current row with maxval to get a 1 on the</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// diagonal.</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(k=0; k&lt;4; k++) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A[i*4 + k] /= maxval;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+I[i*4 + k] /= maxval;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// Subtract current row from all other rows so their values before the</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+// diagnal go zero.</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+//</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(j=i+1; j&lt;4; j++) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+val = A[j*4 + i];</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(k=0; k&lt;4; k++) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A[j*4 + k] -= A[i*4 + k] * val;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+I[j*4 + k] -= I[i*4 + k] * val;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; }</FONT></FONT></TT>
+<BR>&nbsp;
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; // Finally
+substract values so that the original matrix becomes identity</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; for(i=3;
+i>=0; i--) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(j=i-1; j>=0; j--) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+val = A[j*4 + i];</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+for(k=0; k&lt;4; k++) {</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+A[j*4 + k] -= A[i*4 + k] * val;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+I[j*4 + k] -= I[i*4 + k] * val;</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+}</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; }</FONT></FONT></TT>
+
+<P><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>&nbsp;&nbsp;&nbsp; memcpy(A,
+I, 16*sizeof(float));</FONT></FONT></TT>
+<BR><TT><FONT COLOR="#33CCFF"><FONT SIZE=+1>}</FONT></FONT></TT>
+<BR>&nbsp;
+<BR><I><FONT COLOR="#FFFF99">&nbsp;</FONT><FONT COLOR="#FFCC00">frenzy</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">&nbsp;"...code is art..."</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">&nbsp;- p.adams@wlv.ac.uk</FONT></I>
+<BR><I><FONT COLOR="#FFCC00">&nbsp;- frenzy_code@hotmail.com</FONT></I>
+<BR><FONT COLOR="#FFCC00">&nbsp;</FONT>
+<CENTER><A HREF="index.html"><IMG SRC="menu.gif" HEIGHT=31 WIDTH=150></A></CENTER>
+&nbsp;
+</BODY>
+</HTML>
