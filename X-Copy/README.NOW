@@ -1,0 +1,35 @@
+
+    ±±  ±±       ±±±±±   ±±±±±  ±±±±±±  ±±  ±±       ±±±±±±   ±±±±±
+     ±± ±       ±±   ±± ±±   ±± ±±   ±± ±±  ±±       ±±   ±± ±±   ±±
+      ±±   ±±±± ±±      ±±   ±± ±±±±±±   ±±±±        ±±±±±±  ±±
+     ± ±±       ±±   ±± ±±   ±± ±±        ±±         ±±      ±±   ±±
+    ±±  ±±       ±±±±±   ±±±±±  ±±        ±±         ±±       ±±±±±
+
+         (c)1995 Matrix Design, Paul Adams. All rights reserved.
+                           Beta Test Version
+              Originally an A-Level Computer Science Project
+                        Coded in Pure Assembler
+
+
+                  The files that should be present are
+
+                             XCOPY.COM
+                             XCOPY.SCR
+                             XCOPY.PAL
+                             INSTALL.BAT
+                             README.NOW
+
+ To install this program simply log onto A: or B: whatever contains the
+ X-COPY disk and type:-
+                            INSTALL A: D:
+
+ Where A: is the drive that contains the X-COPY disk
+       D: is where the program should be installed.
+
+ The program will then be installed into a directory called \XCOPY on
+ what ever drive you specify.
+ 
+ Enjoy the program!
+                                                                - Paul
+
+

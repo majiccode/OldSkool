@@ -1,0 +1,20 @@
+ 컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+ 1000byte Intro                                                   Code:Frenzy
+ 7th December 1996                                    Email:p.adams@wlv.ac.uk
+ 컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+ Introduction:
+    well, i was bored so i decided to code a little intro. i do mean little.
+    this is only 1000bytes. it started off as 1024bytes but i knocked off
+    24bytes by optimizing here and there. the result is quite nice and i'm
+    sure i can drop the size down much more as the fractal code is not very
+    good. oh well, maybe next time ;)
+
+ Requirements:
+    386+ CPU and FPU (486+ recommmended)
+    VGA CARD (fast VLB or PCI would be nice)
+
+ Information:
+    ok, if you are interested in how i did this then feel free to email me.
+    maybe, i'll email source back, who knows. thats enough writing i'm
+    trying to get this NFO to 1000bytes too :-)
