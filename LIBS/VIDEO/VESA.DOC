@@ -1,0 +1,73 @@
+
+ VESA2.0 INTERFACE
+
+
+ dafear!!!!!! :)
+
+ here is a quick list of all functions available.
+
+
+ VESAdetect()
+
+    this _MUST_ be called at the start of your program. it detects if VESA2
+    is present and if so, initalises some stuff. you should take note of
+    the error returned from this function. see the example.c file for the
+    error codes.
+
+
+ VESAopen_surface()
+
+    this will search for the mode you specify and setup a surface structure.
+    then it will set the desired mode ready for use.
+
+ VESAfind_surface()
+
+    this will search for the mode you specify but _NOT_ set it. instead it
+    will simply return TRUE or FALSE depending on if the mode was found
+    or not.
+
+ VESAset_mode()
+
+    this will set a mode number directly, no searching. it will also set
+    bios modes.
+
+ VESAclosedown()
+
+    this will close down this interface. you should call it at the end of
+    your program
+
+ VESAset_bank()
+
+    sets the bank number :)
+
+ VESAset_display_start()
+
+    sets the start address of the display
+
+
+ SURFACE STRUCTURE:
+
+    this is very simple. a surface structure is just a load of info about
+    the mode you have set. it includes this stuff:
+
+    xsize, ysize, bpp
+
+        thats obvious :)
+
+    vram
+
+        the amount of video ram available in bytes
+
+    numpages
+
+        the amount of video pages you have in this mode
+
+    pagesize
+
+        the size in bytes of a page, used for switching pages :)
+
+    lfb
+
+        pointer to the linear frame buffer
+
+

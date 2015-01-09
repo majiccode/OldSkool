@@ -1,0 +1,39 @@
+
+
+
+                           Watcom C/C++ Tools Library
+                        Copyright (c) 1997 Paul D. Adams
+
+
+ MAIN.LIB
+ 컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴
+
+ FMATHS.H       - inline FPU asm functions, 3D maths extensions
+
+ MEMORY.H       - heap memory manager.
+
+ TIMER.H        - high precision timer
+
+ PROFILE.H      - profiling
+
+ KEYBOARD.H     - low level keyboard handler
+
+
+
+ CONTROL.H      - system, IRQ, RETRACE, Timer, Keyboard functions
+
+ VGA.H          - simple vga functions (mode 13h) mainly
+
+ DPMI.H         - dpmi functions
+
+ VIDEO.H        - driver driven video interface
+
+ FLUID3D.H      - fluid3d, realtime 3D graphics engine.
+
+ SND.H          - sound routines, sample playing, module playing
+
+ COMMS.H        - comms routines for serial, parallel port stuff
+
+ NETWORK.H      - ipx network routines
+
+

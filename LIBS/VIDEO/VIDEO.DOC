@@ -1,0 +1,66 @@
+
+ VIDopen()
+
+ VIDregister_drivers();
+
+ VIDset_mode()
+ VIDset_palette()
+ VIDget_palette()
+ VIDset_colour()
+ VIDget_colour
+
+ VIDclear_surface()
+
+ VIDopen_surface()
+
+ VIDcreate_surface()
+
+ VIDblit_surface()
+
+ VIDblit_to_surface()
+
+ VIDget_vretrace()
+
+ VIDget_hretrace()
+
+ VIDclose
+
+
+ MODEINFO structure
+
+    xsize, ysize, bpp
+
+    wx1, wy1, wx2, wy2
+    sx1, sy1, sx2, sy2
+    
+
+    LFB, PLANAR, BANKED
+
+    SURFACE
+
+    BLITTER
+
+    CLIPPER
+
+    SCALER
+
+    DIRECT
+
+
+
+ -------------------------------------  mode functions
+ get_mode_info
+ get_modes
+ set_mode
+ -------------------------------------  palette functions
+ set_colour
+ set_palette
+ get_palette
+ ------------------------------------- paging functions
+ set_page
+ get_page
+ set_address_start
+ get_address_start
+ -------------------------------------
+ blit
+ 

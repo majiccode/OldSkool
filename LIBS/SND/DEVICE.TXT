@@ -1,0 +1,19 @@
+
+
+
+SDEVICE.H
+
+    this contains the device structure:
+
+    typedef struct {
+
+        blah
+        blah
+
+    } SNDDEVICE;
+
+
+
+
+then, for all devices you write your device file with a data structure
+in it matching SNDDEVICE and call it
