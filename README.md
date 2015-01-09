@@ -13,3 +13,12 @@ You'll find cracktros, bbs adverts, 3D engines with 3D Studio keyframing support
 
 Where I can I include all exe's and resources so they can be run in DOSSHELL.
 
+Alot of them do run in DOSSHELL just make sure you increase your clock cycle count to alter their run speed..
+
+cltr-f12/ctrl-f-11 to increase/decrease.
+
+Some of this stuff was targetted to 386 machines, some 486 and of course pentium.
+
+Cheers,
+paul .. aka frenzy
+
