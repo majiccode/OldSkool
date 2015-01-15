@@ -11,9 +11,9 @@ Most of it is for MSDOS and is probably written in C using Watcom C and Assembly
 
 You'll find cracktros, bbs adverts, 3D engines with 3D Studio keyframing support (software), fake hicolour modes, vesa 2 stuff, protected mode stuff, 2D effects, and a load of misc routines that may or may not work. Concepts like self modifying code, anti-debugging and so on litter the code so enjoy the trip down memory lane :-)
 
-Where I can I include all exe's and resources so they can be run in DOSSHELL.
+Where I can I include all exe's and resources so they can be run in DOSBOX.
 
-Alot of them do run in DOSSHELL just make sure you increase your clock cycle count to alter their run speed..
+Alot of them do run in DOSBOX just make sure you increase your clock cycle count to alter their run speed..
 
 cltr-f12/ctrl-f-11 to increase/decrease.
 
