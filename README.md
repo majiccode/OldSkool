@@ -19,6 +19,30 @@ cltr-f12/ctrl-f-11 to increase/decrease.
 
 Some of this stuff was targetted to 386 machines, some 486 and of course pentium.
 
+Quick rundown:
+1kIntro - intro under 1k featuring 2d bump map, fractal and tunnel effect. source in .ASM file, executable in .COM and readme in the .NFO
+
+BBS - old BBS advert intros.. source in ASM and executables are .COM
+
+Exes - old effects using an old 3D engine
+
+Fake Hicolour - old plasma effect using XMODE to create a fake hicolour mode. source is in ASM but also in Pascal (.PAS) and executable
+
+Intros - some more old cractro style intros. lots of ASM source and exes to run.
+
+L3D - 3d engine written in C with 3DS (3d studio) reader, keyframer, etc. Run the 'runme.bat' file with the name of the .3DS file to render and animate... only has a sub-pixel flat filler for debugging.. hence the multi-coloured triangles..
+
+LIBS - some general interesting code
+
+Old Tutorials - old html tutors I wrote about certain things relating to 3D graphics and algorithms
+
+Raytrace Tunnel - a realtime raytraced tunnel and infinite plane. used a grid and interpolation between grip points. Handy for lots of interesting things, not just raytracing.. interpolating grid points is a good speedup for lots of things :)
+
+UART - very early ASM code I wrote to talk to UART (serial port) back in the days when transferring files between computers was done via floppy disk and serial/parallel cables using tools like laplink!
+
+X-Copy - based on the popular amiga X-Copy program (google it!) its a graphical disk copyier that I did a long long time ago for my A-Level computer science project. Its here because I actually found it on an old backup CD and its exactly 20 years old as of writing this document!!! Wow.. time flys when your coding assembler :)
+
+
 Cheers,
 paul .. aka frenzy
 
