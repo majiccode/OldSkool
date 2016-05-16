@@ -35,7 +35,8 @@ LIBS - some general interesting code
 
 Old Tutorials - old html tutors I wrote about certain things relating to 3D graphics and algorithms
 
-Raytrace Tunnel - a realtime raytraced tunnel and infinite plane. used a grid and interpolation between grip points. Handy for lots of interesting things, not just raytracing.. interpolating grid points is a good speedup for lots of things :)
+Raytrace Tunnel - a realtime raytraced tunnel and infinite plane. used a grid and interpolation between grid points. Handy for lots of interesting things, not just raytracing.. interpolating grid points is a good speedup for lots of things :)
+I couldnt find it but could for example at each point on the grid not just have a texel coordinate but you could also add some velocity vector and perform calculations on neighbourhood grid points with some curl noise to create a smoke effect perhaps? *hint*
 
 UART - very early ASM code I wrote to talk to UART (serial port) back in the days when transferring files between computers was done via floppy disk and serial/parallel cables using tools like laplink!
 
