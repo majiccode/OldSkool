@@ -12,7 +12,7 @@ You'll find cracktros, bbs adverts, 3D engines with 3D Studio keyframing support
 
 Where I can I include all exe's and resources so they can be run in DOSBOX.
 
-Alot of them do run in DOSBOX just make sure you increase your clock cycle count to alter their run speed..
+Alot of them do run in DOSBOX just make sure you increase your clock cycle count to alter their run speed.. And make sure you put DOS4GW.EXE in the same directory. Not everything used that. Some used PMODE/W by TRAN!! Now that is a name from the past!
 
 cltr-f12/ctrl-f11 to increase/decrease.
 
