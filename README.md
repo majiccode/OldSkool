@@ -34,7 +34,7 @@ Exes - old effects using an old 3D engine
 
 Fake Hicolour - old plasma effect using XMODE to create a fake hicolour mode. source is in ASM but also in Pascal (.PAS) and executable!
 
-[ALT_TEXT](/plasma.png?raw=true "plasma.com")
+![ALT_TEXT](/plasma.png?raw=true "plasma.com")
 
 Intros - some more old cractro style intros. lots of ASM source and exes to run.
 ![ALT_TEXT](/hack-intro.png?raw=true "intro.com")
@@ -59,7 +59,7 @@ UART - very early ASM code I wrote to talk to UART (serial port) back in the day
 
 X-Copy - based on the popular amiga X-Copy program (google it!) its a graphical disk copyier that I did a long long time ago for my A-Level computer science project. Its here because I actually found it on an old backup CD and its exactly 20 years old as of writing this document!!! Wow.. time flys when your coding assembler :)
 
-![XCOPY](/xcopy-pc.png?raw=true "XCOPY-PC screenshot")
+![ALT_TEXT](/xcopy-pc.png?raw=true "XCOPY-PC screenshot")
 
 Cheers,
 paul .. aka frenzy
