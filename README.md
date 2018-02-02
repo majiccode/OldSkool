@@ -32,8 +32,9 @@ Exes - old effects using an old 3D engine
 ![ALT_TEXT](/water-duck.png?raw=true "water effect + gouraud shaded duck")
 ![ALT_TEXT](/rock-phong.png?raw=true "moprhing rock object + phong shaded texture mapping")
 
-Fake Hicolour - old plasma effect using XMODE to create a fake hicolour mode. source is in ASM but also in Pascal (.PAS) and executable
-![ALT_TEXT](/plasma.png?raw=true "plasma.com")
+Fake Hicolour - old plasma effect using XMODE to create a fake hicolour mode. source is in ASM but also in Pascal (.PAS) and executable!
+
+[ALT_TEXT](/plasma.png?raw=true "plasma.com")
 
 Intros - some more old cractro style intros. lots of ASM source and exes to run.
 ![ALT_TEXT](/hack-intro.png?raw=true "intro.com")
