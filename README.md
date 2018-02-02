@@ -42,6 +42,7 @@ UART - very early ASM code I wrote to talk to UART (serial port) back in the day
 
 X-Copy - based on the popular amiga X-Copy program (google it!) its a graphical disk copyier that I did a long long time ago for my A-Level computer science project. Its here because I actually found it on an old backup CD and its exactly 20 years old as of writing this document!!! Wow.. time flys when your coding assembler :)
 
+![XCOPY](/xcopy-pc.png?raw=true "XCOPY-PC screenshot")
 
 Cheers,
 paul .. aka frenzy
