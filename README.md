@@ -1,4 +1,4 @@
-#OldSkool
+# OldSkool
 
 Dumping ground for some oldskool demoscene related stuff and things I did a long long time ago now dating from 1995 onwards I imagine. 
 Most of these things of mine I found lying around on an old backup CD and so I thought I'd place them here in case they ever become interesting to someone in the future. You will notice my name or alias (frenzy) splattered around the code. In the 90's onwards I used that alias when coding BBS intros, cracks and so forth.
@@ -14,43 +14,43 @@ Alot of them do run in DOSBOX just make sure you increase your clock cycle count
 Note: Some of this stuff was targetted to 386 machines, some 486 and of course pentium so use the CTRL-F12 and CTRL-F11 keys to increase/decrease clock cycles otherwise some will run slow and others will run so fast you may not see anything!
 
 
-###1kIntro
+### 1k Intro
 Intro under 1k featuring 2d bump map, fractal and tunnel effect. source in .ASM file, executable in .COM and readme in the .NFO
 
-###BBS
+### BBS (Bulletin Board System)
 Old BBS advert intros.. source in ASM and executables are .COM
 
-###Exes
+### Exes
 Old effects using an old 3D engine
 
-###Fake Hicolour
+### Fake Hicolour
 Old plasma effect using XMODE to create a fake hicolour mode. source is in ASM but also in Pascal (.PAS) and executable!
 
-###Intros
+### Intros
 Some more old cractro style intros. lots of ASM source and exes to run.
 
-###L3D
+### L3D
 3d engine written in C with 3DS (3d studio) reader, keyframer, etc. Run the 'runme.bat' file with the name of the .3DS file to render and animate... only has a sub-pixel flat filler for debugging.. hence the multi-coloured triangles..
 
-###LIBS
+### LIBS
 Some general interesting code
 
-###Old Tutorials
+### Old Tutorials
 Old html tutors I wrote about certain things relating to 3D graphics and algorithms
 
-###Raytrace Tunnel
+### Raytrace Tunnel
 A realtime raytraced tunnel and infinite plane. used a grid and interpolation between grid points. Handy for lots of interesting things, not just raytracing.. interpolating grid points is a good speedup for lots of things :)
 I couldnt find it but could for example at each point on the grid not just have a texel coordinate but you could also add some velocity vector and perform calculations on neighbourhood grid points with some curl noise to create a smoke effect perhaps? *hint*
 
-###UART
+### UART
 Very early ASM code I wrote to talk to UART (serial port) back in the days when transferring files between computers was done via floppy disk and serial/parallel cables using tools like laplink!
 
-###X-Copy
+### X-Copy
 Based on the popular amiga X-Copy program (google it!) its a graphical disk copyier that I did a long long time ago for my A-Level computer science project. Its here because I actually found it on an old backup CD and its exactly 20 years old as of writing this document!!! Wow.. time flys when your coding assembler :)
 
 ![ALT_TEXT](/xcopy-pc.png?raw=true "XCOPY-PC screenshot")
 
-##Screenshots:
+## Screenshots:
 
 ![ALT_TEXT](/bbs-intro.png?raw=true "tesko.com")
 ![ALT_TEXT](/bbs-intro-2.png?raw=true "intro2.com")
@@ -67,6 +67,6 @@ Based on the popular amiga X-Copy program (google it!) its a graphical disk copy
 ![ALT_TEXT](/raytrace-tube.png?raw=true "Realtime raytracing")
 ![ALT_TEXT](/raytrace-plane.png?raw=true "Realtime raytracing")
 
-Cheers,
-paul .. aka frenzy
+Regards,
+Paul .. aka frenzy
 
